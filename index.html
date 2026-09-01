@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>רגש ודיון בדפי השיחה של ויקיפדיה העברית</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;500;700&family=Heebo:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#EDF0EE;--panel:#FAFBFA;--ink:#16232B;--mute:#6B7A83;--line:#D3D9D6;--blue:#2B6F8A;--blue-soft:#CFE0E8;--serif:"Frank Ruhl Libre",serif;--sans:"Heebo",system-ui,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-weight:300;font-size:17px;line-height:1.6}
+.wrap{max-width:44rem;margin:0 auto;padding:3rem 1.4rem 5rem}
+h1{font-family:var(--serif);font-weight:500;font-size:2.2rem;line-height:1.2;margin:0 0 .5rem}
+.lead{font-size:1.15rem;margin:0 0 2.2rem;max-width:38rem}
+h2{font-family:var(--serif);font-weight:500;font-size:1.25rem;margin:2.2rem 0 .6rem}
+p{margin:.4rem 0}
+.stats{display:flex;gap:2.4rem;flex-wrap:wrap;margin:.6rem 0 0;padding:1rem 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.stats div{font-variant-numeric:tabular-nums}
+.stats b{display:block;font-family:var(--serif);font-weight:500;font-size:1.9rem;line-height:1.1}
+.stats span{color:var(--mute);font-size:.9rem}
+.links a{display:block;padding:.55rem 0;border-bottom:1px solid var(--line);color:var(--ink);text-decoration:none}
+.links a:hover{color:var(--blue)}
+.links a small{color:var(--mute);margin-inline-start:.6rem}
+.chain{margin:.8rem 0 0;padding:0;list-style:none;display:grid;grid-template-columns:1fr;gap:.35rem}
+.chain li{padding:.5rem .9rem;background:var(--panel);border-inline-start:3px solid var(--blue-soft)}
+.chain li:nth-child(3){border-inline-start-color:var(--blue)}
+.foot{color:var(--mute);font-size:.85rem;margin-top:3rem}
+</style>
+</head>
+<body><div class="wrap">
+<h1>רגש, דיון ואיכות בדפי השיחה של ערכי בריאות הנפש</h1>
+<p class="lead">מה קורה לדיון בוויקיפדיה כשמישהו מתעצבן? ומה זה עושה לערך שנשאר אחריו?</p>
+
+<p>מחקר משותף של ענת טלמון (האוניברסיטה העברית) ונמרוד טלמון (אוניברסיטת בן-גוריון), במימון קרן דרור לין של ויקימדיה ישראל. אנחנו קוראים את דפי השיחה של ערכים על בריאות הנפש בוויקיפדיה העברית ובודקים שרשרת אחת:</p>
+<ul class="chain">
+<li>ביטויי רגש בדיון — תוקפנות, פיוס, תשישות, הידבקות רגשית</li>
+<li>מבנה הדיון — נשירת משתתפים או התכנסות להסכמה</li>
+<li>איכות הערך שנשאר — יציבות הגרסה המוסכמת, ונכונותה בעיני מומחים</li>
+</ul>
+
+<h2>מצב הקורפוס</h2>
+<div class="stats" id="stats"><div><b>…</b><span>ערכים</span></div><div><b>…</b><span>דיונים</span></div><div><b>…</b><span>תגובות חתומות</span></div><div><b>…</b><span>דיונים עשירים (5+)</span></div></div>
+<p style="color:var(--mute);font-size:.9rem">קבוצת זרע: ערכים קליניים מרכזיים ועוד כמה ערכים סמוכים סוערים. רשימת הערכים הסופית עדיין נבנית.</p>
+
+<h2>כלים</h2>
+<div class="links">
+<a href="explorer.html">סייר הקורפוס<small>ערכים, דיונים, וקריאת כל שיחה כרצף תגובות</small></a>
+<a href="https://github.com/nimrodtalmon/Wikipediadiscussions">קוד ונתונים<small>GitHub</small></a>
+</div>
+
+<p class="foot" id="built"></p>
+</div>
+<script>
+fetch("site/corpus.json").then(r=>r.json()).then(d=>{const A=d.articles,T=A.flatMap(a=>a.threads);
+const v=[A.length,T.length,T.reduce((s,t)=>s+t.comments,0),T.filter(t=>t.comments>=5).length];
+document.querySelectorAll("#stats b").forEach((b,i)=>b.textContent=v[i]);
+document.getElementById("built").textContent="נתונים נמשכו מוויקיפדיה העברית ב-"+d.built+".";});
+</script>
+</body></html>

@@ -76,7 +76,7 @@ td .pg{display:block;font-size:.72rem;color:var(--mute)}
 </head>
 <body>
 <header>
-  <h1>דפי שיחה על בריאות הנפש</h1>
+  <h1><a href="./" style="color:inherit;text-decoration:none">דפי שיחה על בריאות הנפש</a></h1>
   <span class="meta" id="meta">טוען…</span>
 </header>
 <main data-view="articles">
@@ -110,7 +110,7 @@ const SIG=/(\d{1,2}:\d{2}),?\s+(\d{1,2}\s+ב?[א-ת]+\s+\d{4})\s+\((?:IST|IDT|UT
 const USER=/\[\[(?:משתמש|משתמשת|שיחת משתמש|שיחת משתמשת|User|User talk):([^|\]#/]+)[^\]]*\]\]/;
 let D, cur=null, curTh=null, sortK="comments", sortDir=-1;
 const main=$("main");
-fetch("data/corpus.json").then(r=>r.json()).then(d=>{D=d;
+fetch("site/corpus.json").then(r=>r.json()).then(d=>{D=d;
   const A=d.articles, T=A.reduce((s,a)=>s+a.threads.length,0), C=A.reduce((s,a)=>s+a.threads.reduce((x,t)=>x+t.comments,0),0);
   $("#meta").textContent=`${A.length} ערכים · ${T} דיונים · ${C} תגובות חתומות · נבנה ${d.built}`;
   renderArts();});

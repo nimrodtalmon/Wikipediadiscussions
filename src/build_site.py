@@ -21,5 +21,5 @@ for f in sorted((ROOT/"data").glob("*.json")):
                  "talk_revs":sum(len(t["revs"] or []) for t in rec["talk_pages"]),"article_revs":len(rec["article_revs"]),
                  "archives":len(rec["talk_pages"])-1,"threads":ths})
 out={"built":__import__("datetime").date.today().isoformat(),"articles":arts}
-(ROOT/"docs/data/corpus.json").write_text(json.dumps(out,ensure_ascii=False))
-print(len(arts),"articles,",sum(len(a["threads"]) for a in arts),"threads,",round((ROOT/"docs/data/corpus.json").stat().st_size/1e6,2),"MB")
+(ROOT/"site/corpus.json").write_text(json.dumps(out,ensure_ascii=False))
+print(len(arts),"articles,",sum(len(a["threads"]) for a in arts),"threads,",round((ROOT/"site/corpus.json").stat().st_size/1e6,2),"MB")

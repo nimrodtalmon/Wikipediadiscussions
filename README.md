@@ -12,5 +12,7 @@ Question: do emotional expressions in talk-page discussions predict discussion s
 Raw fetched JSON is git-ignored; regenerate with the fetcher.
 Report lives on Overleaf (project 6a97251075788b2977dd80db).
 
-## Explorer (GitHub Pages)
-`docs/` is a static explorer: articles → threads → thread reader. Rebuild data with `python3 src/build_site.py` (writes `docs/data/corpus.json`), then push. Served from branch `main`, folder `/docs`.
+## Site (GitHub Pages, branch `main`, root)
+- `index.html` — project homepage (question, status, links)
+- `explorer.html` — corpus explorer: articles → threads → thread reader
+- `site/corpus.json` — data for both, rebuilt with `python3 src/build_site.py`
