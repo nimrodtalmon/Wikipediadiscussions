@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>דפי שיחה — בריאות הנפש בוויקיפדיה העברית</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;500;700&family=Heebo:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EDF0EE; --panel:#FAFBFA; --ink:#16232B; --mute:#6B7A83; --line:#D3D9D6;
+  --blue:#2B6F8A; --blue-soft:#CFE0E8; --ochre:#9C7A1E; --ochre-soft:#EFE4C2;
+  --serif:"Frank Ruhl Libre",serif; --sans:"Heebo",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:var(--sans);font-weight:300;font-size:15px}
+a{color:var(--blue)}
+header{display:flex;align-items:baseline;gap:1.2rem;padding:.9rem 1.4rem .6rem;border-bottom:1px solid var(--line)}
+header h1{font-family:var(--serif);font-weight:500;font-size:1.35rem;margin:0}
+header .meta{color:var(--mute);font-size:.85rem}
+main{display:grid;grid-template-columns:19rem 27rem 1fr;height:calc(100% - 3.4rem)}
+section{overflow:auto;border-inline-start:1px solid var(--line);padding:.6rem 0}
+section:first-child{border:0}
+h2{font-family:var(--serif);font-weight:500;font-size:1rem;margin:.3rem 1.2rem .6rem;color:var(--mute)}
+.controls{display:flex;flex-wrap:wrap;gap:.6rem 1rem;align-items:center;padding:0 1.2rem .6rem;font-size:.85rem;color:var(--mute)}
+.controls input[type=search]{font:inherit;font-size:.85rem;padding:.25rem .5rem;border:1px solid var(--line);border-radius:3px;background:var(--panel);color:var(--ink);width:11rem}
+.controls input[type=range]{width:7rem;accent-color:var(--blue);vertical-align:middle}
+.controls label{cursor:pointer}
+/* articles */
+.art{display:grid;grid-template-columns:1fr auto;gap:.1rem .8rem;padding:.55rem 1.2rem;cursor:pointer;border-inline-start:3px solid transparent}
+.art:hover{background:var(--panel)}
+.art.sel{background:var(--panel);border-inline-start-color:var(--blue)}
+.art .t{font-family:var(--serif);font-size:1.05rem;font-weight:500}
+.art .t.adj::after{content:"נלווה";font-family:var(--sans);font-size:.7rem;font-weight:400;color:var(--ochre);background:var(--ochre-soft);padding:0 .35rem;border-radius:2px;margin-inline-start:.5rem;vertical-align:middle}
+.art .n{font-size:.85rem;color:var(--mute);text-align:left;font-variant-numeric:tabular-nums}
+.bar{grid-column:1/-1;height:6px;display:flex;gap:1px;background:transparent}
+.bar i{display:block;height:100%;background:var(--blue-soft)}
+.bar i.rich{background:var(--blue)}
+/* threads */
+table{width:100%;border-collapse:collapse;font-size:.88rem}
+th{font-weight:500;color:var(--mute);text-align:right;padding:.35rem .6rem;border-bottom:1px solid var(--line);cursor:pointer;user-select:none;white-space:nowrap;position:sticky;top:0;background:var(--bg)}
+th.asc::after{content:" ↑"} th.desc::after{content:" ↓"}
+td{padding:.4rem .6rem;border-bottom:1px solid #E4E8E6;vertical-align:top;font-variant-numeric:tabular-nums}
+td.num{text-align:left;width:3.2rem;color:var(--mute)}
+td.num b{color:var(--ink);font-weight:500}
+tr.th{cursor:pointer} tr.th:hover td{background:var(--panel)} tr.th.sel td{background:var(--panel);box-shadow:inset 3px 0 var(--blue)}
+td .ttl{font-family:var(--serif);font-size:1rem}
+td .pg{display:block;font-size:.72rem;color:var(--mute)}
+/* reader */
+.reader{padding:0 1.6rem 3rem}
+.reader h3{font-family:var(--serif);font-weight:500;font-size:1.5rem;margin:.4rem 0 .2rem;line-height:1.25}
+.reader .sub{color:var(--mute);font-size:.85rem;margin-bottom:1.2rem}
+.reader .sub a{margin-inline-start:.8rem}
+.cmt{display:grid;grid-template-columns:1fr 11rem;gap:0 1rem;padding:.55rem 0;border-top:1px solid #E4E8E6;line-height:1.6;max-width:62rem}
+.cmt .body{word-break:break-word}
+.cmt .who{font-size:.78rem;color:var(--mute);text-align:left;line-height:1.35;padding-top:.15rem}
+.cmt .who b{display:block;font-weight:500;color:var(--ink)}
+.cmt .who .d{font-variant-numeric:tabular-nums}
+.cmt.unsigned .who{color:#B4BDC2}
+.body .tmpl{color:var(--mute);font-size:.8em;border:1px dashed var(--line);padding:0 .3rem;border-radius:2px}
+.body .sig{display:none}
+.empty{color:var(--mute);padding:2rem 1.6rem;font-family:var(--serif);font-size:1.1rem;max-width:30rem;line-height:1.5}
+.back{display:none;font-size:.85rem;padding:.3rem 1.2rem}
+@media (max-width:900px){
+  main{grid-template-columns:1fr;height:auto}
+  section{border:0;display:none;min-height:60vh}
+  main[data-view=articles] #arts,main[data-view=threads] #ths,main[data-view=reader] #rd{display:block}
+  .back{display:block}
+  .cmt{grid-template-columns:1fr}
+  .cmt .who{text-align:right;order:-1}
+  .cmt .who b{display:inline;margin-inline-end:.5rem}
+}
+@media (prefers-reduced-motion:no-preference){.art,tr.th td{transition:background .12s}}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+</style>
+</head>
+<body>
+<header>
+  <h1>דפי שיחה על בריאות הנפש</h1>
+  <span class="meta" id="meta">טוען…</span>
+</header>
+<main data-view="articles">
+  <section id="arts">
+    <h2>ערכים</h2>
+    <div class="controls">
+      <label><input type="checkbox" id="fCore" checked> ליבה</label>
+      <label><input type="checkbox" id="fAdj" checked> נלווים</label>
+    </div>
+    <div id="artList"></div>
+  </section>
+  <section id="ths">
+    <a href="#" class="back" data-to="articles">→ כל הערכים</a>
+    <h2 id="thsTitle">דיוני שיחה</h2>
+    <div class="controls">
+      <input type="search" id="q" placeholder="חיפוש בכותרות">
+      <label>לפחות <span id="minV">1</span> תגובות <input type="range" id="min" min="0" max="20" value="1"></label>
+    </div>
+    <table><thead><tr>
+      <th data-k="title">דיון</th><th data-k="comments" class="desc">תגובות</th><th data-k="editors">עורכים</th><th data-k="chars">תווים</th><th data-k="first">התחלה</th>
+    </tr></thead><tbody id="thBody"></tbody></table>
+  </section>
+  <section id="rd">
+    <a href="#" class="back" data-to="threads">→ לרשימת הדיונים</a>
+    <div id="reader" class="reader"><div class="empty">בחירת ערך משמאל, ואז דיון, מציגה את השיחה כאן כרצף תגובות עם שם העורך והתאריך בשוליים.</div></div>
+  </section>
+</main>
+<script>
+const $=s=>document.querySelector(s), esc=s=>s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+const SIG=/(\d{1,2}:\d{2}),?\s+(\d{1,2}\s+ב?[א-ת]+\s+\d{4})\s+\((?:IST|IDT|UTC)\)/g;
+const USER=/\[\[(?:משתמש|משתמשת|שיחת משתמש|שיחת משתמשת|User|User talk):([^|\]#/]+)[^\]]*\]\]/;
+let D, cur=null, curTh=null, sortK="comments", sortDir=-1;
+const main=$("main");
+fetch("data/corpus.json").then(r=>r.json()).then(d=>{D=d;
+  const A=d.articles, T=A.reduce((s,a)=>s+a.threads.length,0), C=A.reduce((s,a)=>s+a.threads.reduce((x,t)=>x+t.comments,0),0);
+  $("#meta").textContent=`${A.length} ערכים · ${T} דיונים · ${C} תגובות חתומות · נבנה ${d.built}`;
+  renderArts();});
+function renderArts(){
+  const core=$("#fCore").checked, adj=$("#fAdj").checked;
+  const list=D.articles.filter(a=>(a.ring==="core"&&core)||(a.ring==="adjacent"&&adj))
+    .map(a=>({...a,c:a.threads.reduce((s,t)=>s+t.comments,0)})).sort((x,y)=>y.c-x.c);
+  const mx=Math.max(...list.map(a=>a.c),1);
+  $("#artList").innerHTML=list.map(a=>{
+    const ths=[...a.threads].sort((x,y)=>y.comments-x.comments);
+    const bar=ths.filter(t=>t.comments).map(t=>`<i class="${t.comments>=5?'rich':''}" style="width:${t.comments/mx*100}%"></i>`).join("");
+    return `<div class="art ${cur===a.title?'sel':''}" data-t="${esc(a.title)}" tabindex="0">
+      <span class="t ${a.ring==='adjacent'?'adj':''}">${esc(a.title)}</span>
+      <span class="n">${a.c} תגובות · ${a.threads.length} דיונים</span>
+      <div class="bar" title="כל פס = דיון; כהה = 5+ תגובות">${bar}</div></div>`;}).join("");
+  document.querySelectorAll(".art").forEach(el=>{el.onclick=el.onkeydown=e=>{if(e.type==="keydown"&&e.key!=="Enter")return;selectArt(el.dataset.t);};});
+}
+function selectArt(t){cur=t;curTh=null;renderArts();renderThs();main.dataset.view="threads";
+  $("#reader").innerHTML=`<div class="empty">בחירת דיון מהרשימה תציג אותו כאן.</div>`;}
+function renderThs(){
+  const a=D.articles.find(x=>x.title===cur); if(!a)return;
+  $("#thsTitle").textContent=`${a.title} — ${a.threads.length} דיונים · ${a.talk_revs} עריכות בדפי השיחה · ${a.article_revs} עריכות בערך${a.archives?` · ${a.archives} ארכיונים`:""}`;
+  const q=$("#q").value.trim(), mn=+$("#min").value;
+  let rows=a.threads.map((t,i)=>({...t,i})).filter(t=>t.comments>=mn&&(!q||t.title.includes(q)));
+  rows.sort((x,y)=>{const u=x[sortK],v=y[sortK];return (typeof u==="number"?u-v:String(u).localeCompare(String(v),"he"))*sortDir;});
+  $("#thBody").innerHTML=rows.map(t=>`<tr class="th ${curTh===t.i?'sel':''}" data-i="${t.i}" tabindex="0">
+    <td><span class="ttl">${esc(t.title)}</span>${t.page.includes("/")?`<span class="pg">${esc(t.page.split(":")[1])}</span>`:""}</td>
+    <td class="num"><b>${t.comments}</b></td><td class="num">${t.editors}</td><td class="num">${(t.chars/1000).toFixed(1)}k</td><td class="num">${t.first||"—"}</td></tr>`).join("")
+    ||`<tr><td colspan="5" class="empty">אין דיונים שעונים לסינון.</td></tr>`;
+  document.querySelectorAll("tr.th").forEach(el=>{el.onclick=el.onkeydown=e=>{if(e.type==="keydown"&&e.key!=="Enter")return;showThread(+el.dataset.i);};});
+}
+function wiki(s){
+  s=esc(s);
+  s=s.replace(/\{\{([^{}|]+)(?:\|[^{}]*)?\}\}/g,(m,n)=>`<span class="tmpl">${n.trim()}</span>`);
+  s=s.replace(USER.source?new RegExp(USER.source,"g"):USER,(m,u)=>`<span class="u">${u.trim()}</span>`);
+  s=s.replace(/\[\[([^\]|]+)\|([^\]]+)\]\]/g,'<a href="https://he.wikipedia.org/wiki/$1" target="_blank" rel="noopener">$2</a>');
+  s=s.replace(/\[\[([^\]]+)\]\]/g,'<a href="https://he.wikipedia.org/wiki/$1" target="_blank" rel="noopener">$1</a>');
+  s=s.replace(/\[(https?:\/\/\S+)\s+([^\]]+)\]/g,'<a href="$1" target="_blank" rel="noopener">$2</a>');
+  s=s.replace(/'''(.+?)'''/g,"<b>$1</b>").replace(/''(.+?)''/g,"<i>$1</i>");
+  s=s.replace(/&lt;(\/?)(s|small|br|u)\s*\/?&gt;/g,"<$1$2>").replace(/&lt;\/?nowiki&gt;/g,"");
+  s=s.replace(/&lt;!--[\s\S]*?--&gt;/g,"");
+  return s.replace(SIG,'<span class="sig">$&</span>');
+}
+function showThread(i){
+  curTh=i; const a=D.articles.find(x=>x.title===cur), t=a.threads[i]; renderThs();
+  // group lines into comments: a comment ends at a signature timestamp (or at a blank line without one)
+  const lines=t.text.split("\n"); const cmts=[]; let buf=[],ind=0;
+  const flush=(signed)=>{ if(!buf.length)return; const raw=buf.join("\n"); const um=[...raw.matchAll(new RegExp(USER.source,"g"))].pop(); const sm=[...raw.matchAll(SIG)].pop();
+    cmts.push({raw,ind,user:um?um[1].trim():"",date:sm?sm[2]:"",signed}); buf=[]; };
+  for(const l of lines){ const m=l.match(/^([:*#]+)/); const d=m?m[1].length:0;
+    if(!l.trim()){flush(false);continue;}
+    if(buf.length&&d!==ind){flush(false);}
+    if(!buf.length)ind=d; buf.push(l.replace(/^[:*#]+\s?/,""));
+    if(SIG.test(l)){SIG.lastIndex=0;flush(true);} SIG.lastIndex=0; }
+  flush(false);
+  const url=`https://he.wikipedia.org/wiki/${encodeURIComponent(t.page)}#${encodeURIComponent(t.title.replace(/ /g,"_"))}`;
+  $("#reader").innerHTML=`<h3>${esc(t.title)}</h3><div class="sub">${esc(a.title)} · ${t.comments} תגובות חתומות · ${t.editors} עורכים${t.first?` · ${t.first} עד ${t.last}`:""}<a href="${url}" target="_blank" rel="noopener">לדף המקור</a></div>`
+    +cmts.map(c=>`<div class="cmt ${c.signed?'':'unsigned'}" style="margin-inline-start:${Math.min(c.ind,8)*1.1}rem"><div class="body">${wiki(c.raw)}</div><div class="who"><b>${esc(c.user||(c.signed?"?":"לא חתום"))}</b><span class="d">${c.date}</span></div></div>`).join("");
+  main.dataset.view="reader"; $("#rd").scrollTop=0;
+}
+document.querySelectorAll("th").forEach(h=>h.onclick=()=>{const k=h.dataset.k; if(sortK===k)sortDir*=-1; else{sortK=k;sortDir=k==="title"||k==="first"?1:-1;}
+  document.querySelectorAll("th").forEach(x=>x.className=""); h.className=sortDir>0?"asc":"desc"; renderThs();});
+$("#q").oninput=renderThs; $("#min").oninput=e=>{$("#minV").textContent=e.target.value;renderThs();};
+$("#fCore").onchange=$("#fAdj").onchange=renderArts;
+document.querySelectorAll(".back").forEach(b=>b.onclick=e=>{e.preventDefault();main.dataset.view=b.dataset.to;});
+</script>
+</body>
+</html>
