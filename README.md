@@ -16,3 +16,4 @@ Report lives on Overleaf (project 6a97251075788b2977dd80db).
 - `index.html` — project homepage (question, status, links)
 - `explorer.html` — corpus explorer: articles → threads → thread reader
 - `site/corpus.json` — data for both, rebuilt with `python3 src/build_site.py`
+- `site/report.pdf` — compiled from the Overleaf project (`pdflatex main.tex`, copy in); refresh when the report changes
