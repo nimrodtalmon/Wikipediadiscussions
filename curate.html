@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>סינון מועמדים לקורפוס</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;500;700&family=Heebo:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#EDF0EE;--panel:#FAFBFA;--ink:#16232B;--mute:#6B7A83;--line:#D3D9D6;--blue:#2B6F8A;--blue-soft:#CFE0E8;--ochre:#9C7A1E;--ochre-soft:#EFE4C2;--serif:"Frank Ruhl Libre",serif;--sans:"Heebo",system-ui,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-weight:300;font-size:15px}
+header{display:flex;flex-wrap:wrap;align-items:baseline;gap:.4rem 1.2rem;padding:.9rem 1.4rem .6rem;border-bottom:1px solid var(--line)}
+header h1{font-family:var(--serif);font-weight:500;font-size:1.35rem;margin:0}
+header h1 a{color:inherit;text-decoration:none}
+header .meta{color:var(--mute);font-size:.85rem}
+.controls{display:flex;flex-wrap:wrap;gap:.6rem 1.2rem;align-items:center;padding:.7rem 1.4rem;font-size:.88rem;color:var(--mute)}
+.controls input[type=search]{font:inherit;padding:.3rem .6rem;border:1px solid var(--line);border-radius:3px;background:var(--panel);color:var(--ink);width:14rem}
+button{font:inherit;font-size:.88rem;padding:.35rem .9rem;border:1px solid var(--blue);border-radius:3px;background:var(--panel);color:var(--blue);cursor:pointer}
+button:hover{background:var(--blue-soft)}
+table{width:100%;border-collapse:collapse;font-size:.88rem}
+th{font-weight:500;color:var(--mute);text-align:right;padding:.4rem .7rem;border-bottom:1px solid var(--line);cursor:pointer;user-select:none;white-space:nowrap;position:sticky;top:0;background:var(--bg)}
+th.asc::after{content:" ↑"} th.desc::after{content:" ↓"}
+td{padding:.35rem .7rem;border-bottom:1px solid #E4E8E6;vertical-align:top;font-variant-numeric:tabular-nums}
+td.num{text-align:left;color:var(--mute);white-space:nowrap}
+td.num b{color:var(--ink);font-weight:500}
+tr.in td{background:var(--panel)}
+tr.in td:first-child{box-shadow:inset 3px 0 var(--blue)}
+.t{font-family:var(--serif);font-size:1rem}
+.t a{color:inherit;text-decoration:none}
+.t a:hover{color:var(--blue)}
+.seedtag{font-size:.7rem;color:var(--ochre);background:var(--ochre-soft);padding:0 .35rem;border-radius:2px;margin-inline-start:.5rem;vertical-align:middle}
+.path{display:block;font-size:.72rem;color:var(--mute);max-width:34rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+input[type=checkbox]{accent-color:var(--blue);width:1.05rem;height:1.05rem}
+@media(max-width:700px){.path{display:none}}
+</style>
+</head>
+<body>
+<header><h1><a href="./">סינון מועמדים לקורפוס</a></h1><span class="meta" id="meta">טוען…</span></header>
+<div class="controls">
+  <input type="search" id="q" placeholder="חיפוש בשם או במסלול הקטגוריות">
+  <label><input type="checkbox" id="onlyIn"> רק מסומנים</label>
+  <span id="count"></span>
+  <button id="export">הורדת רשימת הנבחרים (txt)</button>
+  <span>הסימונים נשמרים בדפדפן הזה בלבד.</span>
+</div>
+<table><thead><tr>
+<th></th><th data-k="title">ערך</th><th data-k="talk_revs" class="desc">עריכות שיחה</th><th data-k="talk_bytes">גודל שיחה</th><th data-k="archives">ארכיונים</th>
+</tr></thead><tbody id="body"></tbody></table>
+<script>
+const $=s=>document.querySelector(s), esc=s=>s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+let D, sortK="talk_revs", sortDir=-1;
+const KEY="wiki-emotions-curation";
+const sel=new Set(JSON.parse(localStorage.getItem(KEY)||"[]"));
+function save(){localStorage.setItem(KEY,JSON.stringify([...sel]));}
+fetch("site/candidates.json").then(r=>r.json()).then(d=>{D=d;
+  if(!localStorage.getItem(KEY)) d.rows.forEach(r=>{if(r.seed)sel.add(r.title);});
+  save();
+  $("#meta").textContent=`${d.rows.length} מועמדים עם דף שיחה מעל ${d.min_talk_bytes/1000} ק"ב · נסרק ${d.built}`;
+  render();});
+function render(){
+  const q=$("#q").value.trim(), only=$("#onlyIn").checked;
+  let rows=D.rows.filter(r=>(!q||r.title.includes(q)||r.path.includes(q))&&(!only||sel.has(r.title)));
+  rows.sort((x,y)=>{const u=x[sortK],v=y[sortK];return (typeof u==="number"?u-v:String(u).localeCompare(String(v),"he"))*sortDir;});
+  $("#count").textContent=`${sel.size} מסומנים · ${rows.length} מוצגים`;
+  $("#body").innerHTML=rows.slice(0,400).map(r=>`<tr class="${sel.has(r.title)?'in':''}">
+    <td><input type="checkbox" data-t="${esc(r.title)}" ${sel.has(r.title)?"checked":""} aria-label="כלול את ${esc(r.title)}"></td>
+    <td><span class="t"><a href="https://he.wikipedia.org/wiki/שיחה:${encodeURIComponent(r.title)}" target="_blank" rel="noopener">${esc(r.title)}</a></span>${r.seed?'<span class="seedtag">במדגם</span>':""}<span class="path">${esc(r.path)}</span></td>
+    <td class="num"><b>${r.talk_revs}</b></td><td class="num">${(r.talk_bytes/1000).toFixed(0)}k</td><td class="num">${r.archives||"—"}</td></tr>`).join("");
+  document.querySelectorAll("tbody input").forEach(c=>c.onchange=()=>{c.checked?sel.add(c.dataset.t):sel.delete(c.dataset.t);save();render();});
+}
+document.querySelectorAll("th[data-k]").forEach(h=>h.onclick=()=>{const k=h.dataset.k;
+  if(sortK===k)sortDir*=-1; else{sortK=k;sortDir=k==="title"?1:-1;}
+  document.querySelectorAll("th").forEach(x=>x.className="");h.className=sortDir>0?"asc":"desc";render();});
+$("#q").oninput=render; $("#onlyIn").onchange=render;
+$("#export").onclick=()=>{const inc=D.rows.filter(r=>sel.has(r.title)).map(r=>r.title);
+  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([inc.join("\n")+"\n"],{type:"text/plain"}));a.download="seed_curated.txt";a.click();};
+</script>
+</body>
+</html>

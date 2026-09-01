@@ -6,12 +6,14 @@ DATA=pathlib.Path(__file__).resolve().parent.parent/"data"
 
 def q(**p):
     p.update(action="query",format="json",formatversion=2)
+    time.sleep(0.15)
     for attempt in range(5):
         try:
             r=S.get(API,params=p,timeout=60); r.raise_for_status(); return r.json()
         except Exception as e:
             if attempt==4: raise
-            time.sleep(2**attempt)
+            time.sleep(5*2**attempt)
+    
 
 def resolve(title):
     r=q(titles=title,redirects=1); pg=r["query"]["pages"][0]
