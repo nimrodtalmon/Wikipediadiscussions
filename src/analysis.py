@@ -24,6 +24,9 @@ for a in corpus["articles"]:
             win_rev=t["link"]["win_reverts"], excess_rev=t["link"]["win_reverts"]/expected if expected>0 else None,
             post_days=t["link"]["post_days"], censored=t["link"]["censored"],
             acc=t["q"]["accuracy"] if t.get("q") else None,
+            hx=t["dyn"]["hostile_exit_share"] if t.get("dyn") else None,
+            endc=t["dyn"]["ends_con"] if t.get("dyn") else None,
+            cont=t["dyn"]["contagion_r"] if t.get("dyn") else None,
             src=t["q"]["sourcing"] if t.get("q") else None))
 print(f"n={len(rows)} rich linked threads")
 
@@ -41,6 +44,16 @@ res["tests"]["con_vs_post"]=sp(A("con"),lp,"conciliation share vs log post-stabi
 res["tests"]["agg_vs_acc"]=sp(A("agg"),A("acc"),"aggression share vs quality (accuracy)")
 res["tests"]["post_vs_acc"]=sp(lp,A("acc"),"log post-stability vs quality (accuracy)")
 res["tests"]["editors_vs_post"]=sp(A("editors"),lp,"num editors vs log post-stability")
+res["tests"]["hostile_exit_vs_post"]=sp(A("hx"),lp,"hostile-exit share vs log post-stability")
+res["tests"]["hostile_exit_vs_acc"]=sp(A("hx"),A("acc"),"hostile-exit share vs quality (accuracy)")
+res["tests"]["contagion_vs_post"]=sp(A("cont"),lp,"valence contagion (lag-1 r) vs log post-stability")
+g1=[r["post_days"] for r in rows if r["endc"] and not r["censored"]]
+g0=[r["post_days"] for r in rows if r["endc"] is False and not r["censored"]]
+if len(g1)>=5 and len(g0)>=5:
+    import statistics as st2
+    u,p2=mannwhitneyu(g1,g0)
+    print(f"post-stability, ends-conciliatory (med {st2.median(g1):.0f}d, n={len(g1)}) vs not (med {st2.median(g0):.0f}d, n={len(g0)}): U p={p2:.3f}")
+    res["tests"]["endcon_post_mw"]=dict(p=round(p2,4),med_con=st2.median(g1),med_not=st2.median(g0),n1=len(g1),n0=len(g0))
 # group test: any aggression vs none, on uncensored post_days
 g1=[r["post_days"] for r in rows if r["any_agg"] and not r["censored"]]
 g0=[r["post_days"] for r in rows if not r["any_agg"] and not r["censored"]]

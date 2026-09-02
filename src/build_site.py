@@ -4,6 +4,7 @@ from parse_threads import threads as split_threads, SIG, USER
 from emotion import score as emo_score
 from stability import analyze as stab
 from link_threads import identity_flags, link
+from dynamics import dynamics
 from collections import Counter
 ROOT=pathlib.Path(__file__).resolve().parent.parent
 MONTHS={m:i+1 for i,m in enumerate("ינואר פברואר מרץ אפריל מאי יוני יולי אוגוסט ספטמבר אוקטובר נובמבר דצמבר".split())}
@@ -50,6 +51,7 @@ for f in sorted((ROOT/"data").glob("*.json")):
     for ti,t in enumerate(ths):
         t["link"]=link(rs,flags,t)
         _qv=Q.get(f"{rec['article']}::{ti}::{t['title']}"); t["q"]=_qv if _qv and "accuracy" in _qv else None
+        t["dyn"]=dynamics(t["cmts"])
     months=Counter(r["timestamp"][:7] for r in rs)
     m0=rs[0]["timestamp"][:7]; mN=__import__("time").strftime("%Y-%m")
     def _mrange(a,b):
