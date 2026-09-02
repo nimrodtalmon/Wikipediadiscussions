@@ -110,7 +110,7 @@ svg text{font-family:var(--sans)}
       <label>לפחות <span id="minV">1</span> תגובות <input type="range" id="min" min="0" max="20" value="1"></label>
     </div>
     <table><thead><tr>
-      <th data-k="title">דיון</th><th data-k="comments" class="desc">תגובות</th><th data-k="editors">עורכים</th><th data-k="chars">תווים</th><th data-k="first">התחלה</th>
+      <th data-k="title">דיון</th><th data-k="comments" class="desc">תגובות</th><th data-k="editors">עורכים</th><th data-k="chars">תווים</th><th data-k="first">התחלה</th><th data-k="post">יציבות אחרי</th>
     </tr></thead><tbody id="thBody"></tbody></table>
   </section>
   <section id="rd">
@@ -150,12 +150,12 @@ function renderThs(){
   const st=a.stab;
   $("#thsTitle").innerHTML=`${esc(a.title)} — ${a.threads.length} דיונים · ${a.talk_revs} עריכות שיחה · ${a.article_revs} עריכות בערך<br><span style="font-weight:400">יציבות: ${st.identity_reverts} שחזורים (${(st.revert_rate*100).toFixed(1)}%) · ${st.war_episodes} מלחמות עריכה · הגרסה הנוכחית בת ${st.current_version_days} ימים</span>`;
   const q=$("#q").value.trim(), mn=+$("#min").value;
-  let rows=a.threads.map((t,i)=>({...t,i})).filter(t=>t.comments>=mn&&(!q||t.title.includes(q)));
+  let rows=a.threads.map((t,i)=>({...t,i,post:t.link?t.link.post_days:-1})).filter(t=>t.comments>=mn&&(!q||t.title.includes(q)));
   rows.sort((x,y)=>{const u=x[sortK],v=y[sortK];return (typeof u==="number"?u-v:String(u).localeCompare(String(v),"he"))*sortDir;});
   $("#thBody").innerHTML=rows.map(t=>`<tr class="th ${curTh===t.i?'sel':''}" data-i="${t.i}" tabindex="0">
     <td><span class="ttl">${esc(t.title)}</span>${t.page.includes("/")?`<span class="pg">${esc(t.page.split(":")[1])}</span>`:""}</td>
-    <td class="num"><b>${t.comments}</b></td><td class="num">${t.editors}</td><td class="num">${(t.chars/1000).toFixed(1)}k</td><td class="num">${t.first||"—"}</td></tr>`).join("")
-    ||`<tr><td colspan="5" class="empty">אין דיונים שעונים לסינון.</td></tr>`;
+    <td class="num"><b>${t.comments}</b></td><td class="num">${t.editors}</td><td class="num">${(t.chars/1000).toFixed(1)}k</td><td class="num">${t.first||"—"}</td><td class="num">${t.link?`${t.link.post_days}ימ׳${t.link.censored?"+":""}`:"—"}</td></tr>`).join("")
+    ||`<tr><td colspan="6" class="empty">אין דיונים שעונים לסינון.</td></tr>`;
   document.querySelectorAll("tr.th").forEach(el=>{el.onclick=el.onkeydown=e=>{if(e.type==="keydown"&&e.key!=="Enter")return;showThread(+el.dataset.i);};});
 }
 function wiki(s){
@@ -173,7 +173,7 @@ function wiki(s){
 function showThread(i){
   curTh=i; const a=D.articles.find(x=>x.title===cur), t=a.threads[i]; renderThs();
   const url=`https://he.wikipedia.org/wiki/${encodeURIComponent(t.page)}#${encodeURIComponent(t.title.replace(/ /g,"_"))}`;
-  $("#reader").innerHTML=`<h3>${esc(t.title)}</h3><div class="sub">${esc(a.title)} · ${t.comments} תגובות חתומות · ${t.editors} עורכים${t.first?` · ${t.first} עד ${t.last}`:""}<a href="${url}" target="_blank" rel="noopener">לדף המקור</a></div>
+  $("#reader").innerHTML=`<h3>${esc(t.title)}</h3><div class="sub">${esc(a.title)} · ${t.comments} תגובות חתומות · ${t.editors} עורכים${t.first?` · ${t.first} עד ${t.last}`:""}${t.link?` · בחלון הדיון: ${t.link.win_edits} עריכות, ${t.link.win_reverts} שחזורים · שחזור הבא ${t.link.post_days} ימים אחרי${t.link.censored?" (טרם)":""}`:""}<a href="${url}" target="_blank" rel="noopener">לדף המקור</a></div>
   <div class="tabs"><a href="#" id="tabTree" class="on">מבנה הדיון</a><a href="#" id="tabRaw">השיחה</a><span class="colorby">צבע לפי <a href="#" id="cbE">רגש</a><a href="#" id="cbU">עורך</a></span></div><div id="view"></div>`;
   $("#cbE").onclick=e=>{e.preventDefault();colorMode="emo";setTab(curTab,t)};
   $("#cbU").onclick=e=>{e.preventDefault();colorMode="ed";setTab(curTab,t)};
