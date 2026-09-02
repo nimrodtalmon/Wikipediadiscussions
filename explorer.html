@@ -170,8 +170,8 @@ function showThread(i){
   <div class="tabs"><a href="#" id="tabTree" class="on">מבנה הדיון</a><a href="#" id="tabRaw">השיחה</a></div><div id="view"></div>`;
   $("#tabTree").onclick=e=>{e.preventDefault();setTab("tree",t)};
   $("#tabRaw").onclick=e=>{e.preventDefault();setTab("raw",t)};
-  setTab(t.cmts.length>1?"tree":"raw",t);
   main.dataset.view="reader"; $("#rd").scrollTop=0;
+  setTab(t.cmts.length>1?"tree":"raw",t);
 }
 function setTab(which,t){
   $("#tabTree").className=which==="tree"?"on":""; $("#tabRaw").className=which==="raw"?"on":"";
@@ -189,7 +189,7 @@ function renderTree(t){
   const C=t.cmts; if(!C.length){$("#view").innerHTML=`<div class="empty">אין תגובות מזוהות בדיון הזה.</div>`;return;}
   const {eds,col}=editorColors(C);
   const row=34, step=30, pad=16, r=11;
-  const W=Math.min($("#rd").clientWidth-40,760), H=C.length*row+pad*2;
+  const W=Math.max(320,Math.min(($("#rd").clientWidth||window.innerWidth)-40,760)), H=C.length*row+pad*2;
   const x=c=>W-pad-r-Math.min(c.ind,12)*step, y=i=>pad+r+i*row;
   let edges="",nodes="";
   C.forEach((c,i)=>{
