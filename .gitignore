@@ -4,3 +4,5 @@ __pycache__/
 !data/validation_sample.csv
 !data/pair_quality.json
 !data/pairs.json
+!data/emotion_llm.json
+!data/lexicon.csv

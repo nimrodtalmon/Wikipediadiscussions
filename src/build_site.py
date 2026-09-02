@@ -45,8 +45,11 @@ PAIRS=json.loads((ROOT/"data/pairs.json").read_text()) if (ROOT/"data/pairs.json
 seeds={l.strip():ring for ring in ("core","adjacent") for l in (ROOT/"data"/f"seed_{ring}.txt").read_text(encoding="utf8").splitlines() if l.strip()}
 arts=[]
 for f in sorted((ROOT/"data").glob("*.json")):
-    if not f.name.endswith(".json") or f.name.startswith("scope_") or f.name in ("corpus.json","threads.csv","quality.json","analysis.json","pairs.json","pair_quality.json","validation_sample.csv"): continue
-    rec=json.loads(f.read_text()); ths=[]
+    if not f.name.endswith(".json"): continue
+    try: rec=json.loads(f.read_text())
+    except Exception: continue
+    if not isinstance(rec,dict) or "talk_pages" not in rec: continue  # only raw article files
+    ths=[]
     for tp in rec["talk_pages"]:
         for meta,body in zip(split_threads(tp["text"]),thread_bodies(tp["text"])):
             ths.append({**meta,"first":iso(meta["first"]),"last":iso(meta["last"]),"page":tp["title"],"text":body.strip(),"cmts":comments(body.strip())})
