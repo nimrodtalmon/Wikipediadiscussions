@@ -147,7 +147,8 @@ function selectArt(t){cur=t;curTh=null;renderArts();renderThs();main.dataset.vie
   $("#reader").innerHTML=`<div class="empty">בחירת דיון מהרשימה תציג אותו כאן.</div>`;}
 function renderThs(){
   const a=D.articles.find(x=>x.title===cur); if(!a)return;
-  $("#thsTitle").textContent=`${a.title} — ${a.threads.length} דיונים · ${a.talk_revs} עריכות בדפי השיחה · ${a.article_revs} עריכות בערך${a.archives?` · ${a.archives} ארכיונים`:""}`;
+  const st=a.stab;
+  $("#thsTitle").innerHTML=`${esc(a.title)} — ${a.threads.length} דיונים · ${a.talk_revs} עריכות שיחה · ${a.article_revs} עריכות בערך<br><span style="font-weight:400">יציבות: ${st.identity_reverts} שחזורים (${(st.revert_rate*100).toFixed(1)}%) · ${st.war_episodes} מלחמות עריכה · הגרסה הנוכחית בת ${st.current_version_days} ימים</span>`;
   const q=$("#q").value.trim(), mn=+$("#min").value;
   let rows=a.threads.map((t,i)=>({...t,i})).filter(t=>t.comments>=mn&&(!q||t.title.includes(q)));
   rows.sort((x,y)=>{const u=x[sortK],v=y[sortK];return (typeof u==="number"?u-v:String(u).localeCompare(String(v),"he"))*sortDir;});

@@ -30,7 +30,7 @@ def subpages(prefix, ns):
 def revisions(title):
     revs=[]; cont={}
     while True:
-        r=q(prop="revisions",titles=title,rvprop="ids|timestamp|user|size|comment",rvlimit=500,**cont)
+        r=q(prop="revisions",titles=title,rvprop="ids|timestamp|user|size|comment|sha1",rvlimit=500,**cont)
         pg=r["query"]["pages"][0]
         if pg.get("missing"): return None
         revs+=pg.get("revisions",[])
