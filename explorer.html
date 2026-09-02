@@ -18,7 +18,17 @@ a{color:var(--blue)}
 header{display:flex;align-items:baseline;gap:1.2rem;padding:.9rem 1.4rem .6rem;border-bottom:1px solid var(--line)}
 header h1{font-family:var(--serif);font-weight:500;font-size:1.35rem;margin:0}
 header .meta{color:var(--mute);font-size:.85rem}
-main{display:grid;grid-template-columns:19rem 27rem 1fr;height:calc(100% - 3.4rem)}
+main{display:grid;grid-template-columns:19rem 6px 27rem 6px 1fr;height:calc(100% - 3.4rem)}
+.divider{cursor:col-resize;background:transparent;border-inline-start:1px solid var(--line)}
+.divider:hover{background:var(--blue-soft)}
+.vizbox{position:relative}
+.expand{position:absolute;top:2px;left:2px;z-index:5;border:1px solid var(--line);background:var(--panel);color:var(--mute);border-radius:3px;font-size:.85rem;line-height:1;padding:.2rem .4rem;cursor:pointer}
+.expand:hover{color:var(--blue);border-color:var(--blue)}
+#lightbox{display:none;position:fixed;inset:0;background:rgba(22,35,43,.92);z-index:50;overflow:auto;padding:2.5rem 1rem 1rem}
+#lightbox.on{display:block}
+#lightbox svg{width:96vw;height:auto;background:var(--bg);border-radius:6px;padding:12px;box-sizing:border-box}
+#lbClose{position:fixed;top:.6rem;left:.9rem;z-index:51;font-size:1.6rem;color:#fff;background:none;border:none;cursor:pointer}
+#lbTitle{color:#fff;font-family:var(--serif);font-size:1.05rem;margin:0 0 .6rem;text-align:center}
 section{overflow:auto;border-inline-start:1px solid var(--line);padding:.6rem 0}
 section:first-child{border:0}
 h2{font-family:var(--serif);font-weight:500;font-size:1rem;margin:.3rem 1.2rem .6rem;color:var(--mute)}
@@ -80,6 +90,7 @@ svg text{font-family:var(--sans)}
 }
 @media (max-width:900px){
   main{grid-template-columns:1fr;height:auto}
+  .divider{display:none}
   section{border:0;display:none;min-height:60vh}
   main[data-view=articles] #arts,main[data-view=threads] #ths,main[data-view=reader] #rd{display:block}
   .back{display:block}
@@ -96,7 +107,7 @@ svg text{font-family:var(--sans)}
   <h1><a href="./" style="color:inherit;text-decoration:none">דפי שיחה על בריאות הנפש</a></h1>
   <span class="meta" id="meta">טוען…</span>
 </header>
-<main data-view="articles">
+<main data-view="articles" id="mainGrid">
   <section id="arts">
     <h2>ערכים</h2>
     <div class="controls">
@@ -105,6 +116,7 @@ svg text{font-family:var(--sans)}
     </div>
     <div id="artList"></div>
   </section>
+  <div class="divider" id="d1"></div>
   <section id="ths">
     <a href="#" class="back" data-to="articles">→ כל הערכים</a>
     <h2 id="thsTitle">דיוני שיחה</h2>
@@ -117,11 +129,13 @@ svg text{font-family:var(--sans)}
       <th data-k="title">דיון</th><th data-k="comments" class="desc">תגובות</th><th data-k="editors">עורכים</th><th data-k="chars">תווים</th><th data-k="first">התחלה</th><th data-k="post">יציבות אחרי</th>
     </tr></thead><tbody id="thBody"></tbody></table>
   </section>
+  <div class="divider" id="d2"></div>
   <section id="rd">
     <a href="#" class="back" data-to="threads">→ לרשימת הדיונים</a>
     <div id="reader" class="reader"><div class="empty">בחירת ערך משמאל, ואז דיון, מציגה את השיחה כאן כרצף תגובות עם שם העורך והתאריך בשוליים.</div></div>
   </section>
 </main>
+<div id="lightbox"><button id="lbClose" aria-label="סגירה">✕</button><div id="lbTitle"></div><div id="lbBody"></div></div>
 <script>
 const $=s=>document.querySelector(s), esc=s=>s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
 const SIG=/(\d{1,2}:\d{2}),?\s+(\d{1,2}\s+ב?[א-ת]+\s+\d{4})\s+\((?:IST|IDT|UTC)\)/g;
@@ -129,7 +143,7 @@ const USER=/\[\[(?:משתמש|משתמשת|שיחת משתמש|שיחת משתמ
 let D, cur=null, curTh=null, sortK="comments", sortDir=-1, colorMode="emo";
 const EMO={agg:{c:"#B3402A",he:"תוקפנות"},con:{c:"#3E7C4F",he:"פיוס"},fru:{c:"#C08A1F",he:"תשישות"},neu:{c:"#98A5AB",he:"ניטרלי"}};
 const main=$("main");
-fetch("site/corpus.json?v=1788325579").then(r=>r.json()).then(d=>{D=d;
+fetch("site/corpus.json?v=1788325830").then(r=>r.json()).then(d=>{D=d;
   const A=d.articles, T=A.reduce((s,a)=>s+a.threads.length,0), C=A.reduce((s,a)=>s+a.threads.reduce((x,t)=>x+t.comments,0),0);
   $("#meta").textContent=`${A.length} ערכים · ${T} דיונים · ${C} תגובות חתומות · נבנה ${d.built}`;
   renderArts();});
@@ -226,6 +240,7 @@ function renderOutcome(a,t){
   g+=`<text x="${W-pad}" y="${H-6}" font-size="11" fill="#6B7A83" text-anchor="end">תחילת הדיון · ${t.first}</text>`;
   g+=`<text x="${pad}" y="${H-6}" font-size="11" fill="${nxt?"#B3402A":"#3E7C4F"}" text-anchor="start">${nxt?"שחזור, כעבור "+t.link.post_days+" ימים":"היום — עדיין ללא שחזור ("+t.link.post_days+" ימים)"}</text>`;
   $("#outcome").innerHTML=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;direction:ltr">${g}</svg>`;
+  addExpand($("#outcome"),t.title+" — הדיון והתוצאה");
 }
 function renderRaw(t){
   $("#view").innerHTML=t.cmts.map(c=>`<div class="cmt ${c.signed?'':'unsigned'}" style="margin-inline-start:${Math.min(c.ind,8)*1.1}rem"><div class="body">${wiki(c.text)}</div><div class="who"><b><i class="edot" style="background:${EMO[c.emo.label].c}"></i>${esc(c.user||(c.signed?"?":"לא חתום"))}</b><span class="d">${c.date}</span></div></div>`).join("");
@@ -290,6 +305,7 @@ function renderStrip(a){
     g+=`<text x="${X(y+"-01-01").toFixed(1)}" y="${H-20}" font-size="9.5" fill="#9AA5AB" text-anchor="middle">${y}</text>`;
   $("#strip").innerHTML=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;direction:ltr" preserveAspectRatio="xMidYMid meet">${g}</svg>
   <div style="font-size:.78rem;color:var(--mute);line-height:1.5">מימין לשמאל: מראשית הערך עד היום. <span style="color:#2B6F8A">קו כחול — בנייה נטו: עולה עם כל עריכה, יורד עם כל שחזור</span>; מישורת או צניחה = מלחמת עריכה. <span style="color:#3E7C4F">ירוק מעל הקו</span>/<span style="color:#B3402A">אדום מתחתיו</span> — מאזן הרגש בדיונים באותו חודש (פיוס מול תוקפנות). <span style="color:#9C7A1E">◆ ציון דיוק (LLM) של גרסה שנבדקה</span>. כל פס תחתון = דיון אחד; לחיצה על פס או על ◆ פותחת את הדיון.</div>`;
+  addExpand($("#strip"),cur+" — ציר זמן");
   document.querySelectorAll(".tmark").forEach(m=>m.onclick=()=>showThread(+m.dataset.i));
 }
 function renderTree(t){
@@ -324,6 +340,7 @@ function renderTree(t){
   }
   $("#view").innerHTML=`<div class="legend">${legend}</div>
   <svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" style="direction:ltr">${marks}${edges}${nodes}</svg><div id="snip"></div>`;
+  addExpand($("#view"),t.title+" — מבנה הדיון");
   document.querySelectorAll(".node").forEach(n=>n.onclick=()=>{const c=C[+n.dataset.i];
     $("#snip").innerHTML=`<div class="snip" style="border-inline-start-color:${EMO[c.emo.label].c}"><div class="w">${esc(c.user||"לא חתום")} · ${c.date} ${c.time||""} · ${EMO[c.emo.label].he}</div>${wiki(c.text)}</div>`;});
 }
@@ -332,6 +349,37 @@ document.querySelectorAll("th").forEach(h=>h.onclick=()=>{const k=h.dataset.k; i
 $("#q").oninput=renderThs; $("#min").oninput=e=>{$("#minV").textContent=e.target.value;renderThs();};
 $("#fCore").onchange=$("#fAdj").onchange=renderArts;
 document.querySelectorAll(".back").forEach(b=>b.onclick=e=>{e.preventDefault();main.dataset.view=b.dataset.to;});
+
+// --- lightbox ---
+function openLB(svgEl,title){
+  $("#lbTitle").textContent=title||"";
+  $("#lbBody").innerHTML=""; $("#lbBody").appendChild(svgEl.cloneNode(true));
+  $("#lightbox").className="on";
+}
+$("#lbClose").onclick=()=>$("#lightbox").className="";
+$("#lightbox").onclick=e=>{if(e.target.id==="lightbox")$("#lightbox").className="";};
+function addExpand(container,title){
+  const svg=container.querySelector("svg"); if(!svg)return;
+  container.classList.add("vizbox");
+  const b=document.createElement("button"); b.className="expand"; b.textContent="⤢"; b.title="הגדלה";
+  b.onclick=e=>{e.stopPropagation();openLB(svg,title);};
+  container.insertBefore(b,container.firstChild);
+}
+// --- pane resize (desktop) ---
+(function(){
+  const grid=$("#mainGrid"); let cols=[19*16,27*16];
+  function apply(){grid.style.gridTemplateColumns=`${cols[0]}px 6px ${cols[1]}px 6px 1fr`;}
+  [["#d1",0],["#d2",1]].forEach(([sel,i])=>{
+    const el=document.querySelector(sel); if(!el)return;
+    el.addEventListener("pointerdown",e=>{
+      e.preventDefault(); el.setPointerCapture(e.pointerId);
+      const x0=e.clientX,c0=cols[i];
+      const mv=ev=>{cols[i]=Math.max(140,c0+(x0-ev.clientX));apply();};
+      const up=()=>{el.removeEventListener("pointermove",mv);el.removeEventListener("pointerup",up);};
+      el.addEventListener("pointermove",mv); el.addEventListener("pointerup",up);
+    });
+  });
+})();
 </script>
 </body>
 </html>
