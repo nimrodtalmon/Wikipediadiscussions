@@ -129,7 +129,7 @@ const USER=/\[\[(?:משתמש|משתמשת|שיחת משתמש|שיחת משתמ
 let D, cur=null, curTh=null, sortK="comments", sortDir=-1, colorMode="emo";
 const EMO={agg:{c:"#B3402A",he:"תוקפנות"},con:{c:"#3E7C4F",he:"פיוס"},fru:{c:"#C08A1F",he:"תשישות"},neu:{c:"#98A5AB",he:"ניטרלי"}};
 const main=$("main");
-fetch("site/corpus.json?v=1788323714").then(r=>r.json()).then(d=>{D=d;
+fetch("site/corpus.json?v=1788325579").then(r=>r.json()).then(d=>{D=d;
   const A=d.articles, T=A.reduce((s,a)=>s+a.threads.length,0), C=A.reduce((s,a)=>s+a.threads.reduce((x,t)=>x+t.comments,0),0);
   $("#meta").textContent=`${A.length} ערכים · ${T} דיונים · ${C} תגובות חתומות · נבנה ${d.built}`;
   renderArts();});
@@ -198,21 +198,34 @@ function setTab(which,t){ curTab=which;
 }
 function renderOutcome(a,t){
   if(!t.link||!t.first){$("#outcome").innerHTML="";return;}
-  const W=Math.max(300,Math.min(($("#rd").clientWidth||window.innerWidth)-60,640)), H=44, pad=8, y0=20;
+  const W=Math.max(320,($("#rd").clientWidth||window.innerWidth)-60), H=86, pad=10, y0=34;
   const d=x=>new Date(x).getTime(), DAY=86400000;
   const w0=d(t.first)-DAY, w1=d(t.last)+8*DAY;
-  const revAll=(a.tl?a.tl.rev:[]).map(d0=>new Date(d0).getTime());
+  const revAll=(a.tl?a.tl.rev:[]).map(x=>new Date(x).getTime());
   const nxt=revAll.filter(x=>x>=w1).sort((p,q)=>p-q)[0];
   const end=nxt||Date.now();
-  const X=x=>pad+(x-w0)/(end-w0||1)*(W-2*pad);
-  let g=`<rect x="${X(w0)}" y="${y0-8}" width="${X(w1)-X(w0)}" height="16" fill="#CFE0E8" opacity="0.55"/>`;
-  g+=`<rect x="${X(w1)}" y="${y0-2}" width="${Math.max(X(end)-X(w1),1)}" height="4" fill="#3E7C4F" opacity="0.8"/>`;
-  revAll.filter(x=>x>=w0&&x<w1).forEach(x=>g+=`<line x1="${X(x)}" x2="${X(x)}" y1="${y0-8}" y2="${y0+8}" stroke="#B3402A" stroke-width="1.2" opacity="0.8"/>`);
-  t.cmts.filter(c=>c.date).forEach(c=>g+=`<circle cx="${X(d(c.date))}" cy="${y0}" r="2.6" fill="${EMO[c.emo.label].c}"/>`);
-  if(nxt)g+=`<line x1="${X(nxt)}" x2="${X(nxt)}" y1="${y0-10}" y2="${y0+10}" stroke="#B3402A" stroke-width="2"/>`;
-  g+=`<text x="${X(w0)}" y="${H-3}" font-size="8.5" fill="#9AA5AB">${t.first}</text>`;
-  g+=`<text x="${W-pad}" y="${H-3}" font-size="8.5" fill="#9AA5AB" text-anchor="end">${nxt?"שחזור אחרי "+t.link.post_days+" ימ׳":"ללא שחזור עד היום ("+t.link.post_days+" ימ׳)"}</text>`;
-  $("#outcome").innerHTML=`<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" style="direction:ltr">${g}</svg>`;
+  // RTL: start (right) -> end (left)
+  const X=x=>W-pad-(x-w0)/(end-w0||1)*(W-2*pad);
+  let g="";
+  // axis with arrowhead pointing left (direction of time)
+  g+=`<line x1="${X(w0)}" x2="${X(end)+8}" y1="${y0}" y2="${y0}" stroke="#8B99A0" stroke-width="1.4"/>`;
+  g+=`<path d="M ${X(end)+9} ${y0-5} L ${X(end)} ${y0} L ${X(end)+9} ${y0+5}" fill="none" stroke="#8B99A0" stroke-width="1.4"/>`;
+  // discussion window
+  g+=`<rect x="${X(w1)}" y="${y0-15}" width="${X(w0)-X(w1)}" height="30" fill="#CFE0E8" opacity="0.55" rx="3"/>`;
+  g+=`<text x="${(X(w0)+X(w1))/2}" y="${y0-20}" font-size="11" fill="#2B6F8A" text-anchor="middle">הדיון</text>`;
+  // quiet stretch after
+  g+=`<rect x="${X(end)}" y="${y0-3}" width="${Math.max(X(w1)-X(end),1)}" height="6" fill="#3E7C4F" opacity="0.85" rx="2"/>`;
+  if(X(w1)-X(end)>46) g+=`<text x="${(X(w1)+X(end))/2}" y="${y0-8}" font-size="11" fill="#3E7C4F" text-anchor="middle">שקט</text>`;
+  // reverts inside window
+  revAll.filter(x=>x>=w0&&x<w1).forEach(x=>g+=`<line x1="${X(x)}" x2="${X(x)}" y1="${y0-15}" y2="${y0+15}" stroke="#B3402A" stroke-width="1.6" opacity="0.85"/>`);
+  // comments as emotion dots
+  t.cmts.filter(c=>c.date).forEach(c=>g+=`<circle cx="${X(d(c.date))}" cy="${y0}" r="4.5" fill="${EMO[c.emo.label].c}" stroke="#fff" stroke-width="1"/>`);
+  // next revert
+  if(nxt)g+=`<line x1="${X(nxt)}" x2="${X(nxt)}" y1="${y0-18}" y2="${y0+18}" stroke="#B3402A" stroke-width="3"/>`;
+  // endpoint labels
+  g+=`<text x="${W-pad}" y="${H-6}" font-size="11" fill="#6B7A83" text-anchor="end">תחילת הדיון · ${t.first}</text>`;
+  g+=`<text x="${pad}" y="${H-6}" font-size="11" fill="${nxt?"#B3402A":"#3E7C4F"}" text-anchor="start">${nxt?"שחזור, כעבור "+t.link.post_days+" ימים":"היום — עדיין ללא שחזור ("+t.link.post_days+" ימים)"}</text>`;
+  $("#outcome").innerHTML=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;direction:ltr">${g}</svg>`;
 }
 function renderRaw(t){
   $("#view").innerHTML=t.cmts.map(c=>`<div class="cmt ${c.signed?'':'unsigned'}" style="margin-inline-start:${Math.min(c.ind,8)*1.1}rem"><div class="body">${wiki(c.text)}</div><div class="who"><b><i class="edot" style="background:${EMO[c.emo.label].c}"></i>${esc(c.user||(c.signed?"?":"לא חתום"))}</b><span class="d">${c.date}</span></div></div>`).join("");
@@ -262,15 +275,19 @@ function renderStrip(a){
     const dom=Object.keys(n).sort((p,q)=>n[q]-n[p])[0];
     return {...x,s:ss,e,L,col:n[dom]>0?EMO[dom].c:"#8FA0A8"};});
   let marks=items.map(x=>`<line class="tmark" data-i="${x.i}" x1="${x.s.toFixed(1)}" x2="${x.e.toFixed(1)}" y1="${yL+x.L*laneH}" y2="${yL+x.L*laneH}" stroke="${x.col}" stroke-width="6" stroke-linecap="round" style="cursor:pointer"><title>${esc(x.t.title)} — ${x.t.comments} תגובות</title></line>`).join("");
-  const H=yL+lanes.length*laneH+16;
+  const H=yL+lanes.length*laneH+34;
   let g=`<path d="${line}" fill="none" stroke="#2B6F8A" stroke-width="1.8"/>`+qmarks;
   g+=`<line x1="${X(m1)}" x2="${X(m0)}" y1="${z}" y2="${z}" stroke="#C8D0CD"/>`+sent+marks;
+  g+=`<line x1="${X(m0)}" x2="${X(m1)+8}" y1="${H-14}" y2="${H-14}" stroke="#8B99A0" stroke-width="1.3"/>`;
+  g+=`<path d="M ${X(m1)+9} ${H-18.5} L ${X(m1)} ${H-14} L ${X(m1)+9} ${H-9.5}" fill="none" stroke="#8B99A0" stroke-width="1.3"/>`;
+  g+=`<text x="${X(m0)}" y="${H-2}" font-size="9.5" fill="#6B7A83" text-anchor="start">יצירת הערך</text>`;
+  g+=`<text x="${X(m1)+2}" y="${H-2}" font-size="9.5" fill="#6B7A83" text-anchor="start">היום</text>`;
   g+=`<text x="${W-2}" y="${8+10}" font-size="10" fill="#2B6F8A" text-anchor="end">בנייה נטו</text>`;
   g+=`<text x="${W-2}" y="${z+3}" font-size="10" fill="#6B7A83" text-anchor="end">מאזן רגשי</text>`;
   g+=`<text x="${W-2}" y="${yL+6}" font-size="10" fill="#6B7A83" text-anchor="end">דיונים</text>`;
   const yrStep=W<560?4:2;
   for(let y=new Date(m0).getFullYear()+1;y<=new Date(m1).getFullYear();y+=yrStep)
-    g+=`<text x="${X(y+"-01-01").toFixed(1)}" y="${H-3}" font-size="9.5" fill="#9AA5AB" text-anchor="middle">${y}</text>`;
+    g+=`<text x="${X(y+"-01-01").toFixed(1)}" y="${H-20}" font-size="9.5" fill="#9AA5AB" text-anchor="middle">${y}</text>`;
   $("#strip").innerHTML=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;direction:ltr" preserveAspectRatio="xMidYMid meet">${g}</svg>
   <div style="font-size:.78rem;color:var(--mute);line-height:1.5">מימין לשמאל: מראשית הערך עד היום. <span style="color:#2B6F8A">קו כחול — בנייה נטו: עולה עם כל עריכה, יורד עם כל שחזור</span>; מישורת או צניחה = מלחמת עריכה. <span style="color:#3E7C4F">ירוק מעל הקו</span>/<span style="color:#B3402A">אדום מתחתיו</span> — מאזן הרגש בדיונים באותו חודש (פיוס מול תוקפנות). <span style="color:#9C7A1E">◆ ציון דיוק (LLM) של גרסה שנבדקה</span>. כל פס תחתון = דיון אחד; לחיצה על פס או על ◆ פותחת את הדיון.</div>`;
   document.querySelectorAll(".tmark").forEach(m=>m.onclick=()=>showThread(+m.dataset.i));

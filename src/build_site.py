@@ -41,7 +41,7 @@ Q=json.loads((ROOT/"data/quality.json").read_text()) if (ROOT/"data/quality.json
 seeds={l.strip():ring for ring in ("core","adjacent") for l in (ROOT/"data"/f"seed_{ring}.txt").read_text(encoding="utf8").splitlines() if l.strip()}
 arts=[]
 for f in sorted((ROOT/"data").glob("*.json")):
-    if not f.name.endswith(".json") or f.name.startswith("scope_") or f.name in ("corpus.json","threads.csv","quality.json"): continue
+    if not f.name.endswith(".json") or f.name.startswith("scope_") or f.name in ("corpus.json","threads.csv","quality.json","analysis.json"): continue
     rec=json.loads(f.read_text()); ths=[]
     for tp in rec["talk_pages"]:
         for meta,body in zip(split_threads(tp["text"]),thread_bodies(tp["text"])):
