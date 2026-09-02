@@ -21,14 +21,15 @@ header .meta{color:var(--mute);font-size:.85rem}
 main{display:grid;grid-template-columns:19rem 6px 27rem 6px 1fr;height:calc(100% - 3.4rem)}
 .divider{cursor:col-resize;background:transparent;border-inline-start:1px solid var(--line)}
 .divider:hover{background:var(--blue-soft)}
-.vizbox{position:relative}
-.expand{position:absolute;top:2px;left:2px;z-index:5;border:1px solid var(--line);background:var(--panel);color:var(--mute);border-radius:3px;font-size:.85rem;line-height:1;padding:.2rem .4rem;cursor:pointer}
-.expand:hover{color:var(--blue);border-color:var(--blue)}
-#lightbox{display:none;position:fixed;inset:0;background:rgba(22,35,43,.92);z-index:50;overflow:auto;padding:2.5rem 1rem 1rem}
-#lightbox.on{display:block}
-#lightbox svg{width:96vw;height:auto;background:var(--bg);border-radius:6px;padding:12px;box-sizing:border-box}
-#lbClose{position:fixed;top:.6rem;left:.9rem;z-index:51;font-size:1.6rem;color:#fff;background:none;border:none;cursor:pointer}
-#lbTitle{color:#fff;font-family:var(--serif);font-size:1.05rem;margin:0 0 .6rem;text-align:center}
+#lightbox{display:none;position:fixed;inset:0;background:rgba(22,35,43,.45);z-index:50;align-items:center;justify-content:center;padding:1rem}
+#lightbox.on{display:flex}
+#lbCard{background:var(--panel);border-radius:10px;box-shadow:0 18px 50px rgba(22,35,43,.35);max-width:min(940px,96vw);max-height:90vh;overflow:auto;padding:1rem 1.2rem 1.2rem;width:100%}
+#lbHead{display:flex;align-items:baseline;justify-content:space-between;gap:1rem;margin-bottom:.6rem}
+#lbTitle{font-family:var(--serif);font-size:1.15rem;color:var(--ink);margin:0}
+#lbClose{font-size:1.2rem;color:var(--mute);background:none;border:none;cursor:pointer;padding:.1rem .3rem}
+#lbClose:hover{color:var(--ink)}
+#lbBody svg{width:100%;height:auto}
+svg.zoomable{cursor:zoom-in}
 section{overflow:auto;border-inline-start:1px solid var(--line);padding:.6rem 0}
 section:first-child{border:0}
 h2{font-family:var(--serif);font-weight:500;font-size:1rem;margin:.3rem 1.2rem .6rem;color:var(--mute)}
@@ -135,7 +136,7 @@ svg text{font-family:var(--sans)}
     <div id="reader" class="reader"><div class="empty">בחירת ערך משמאל, ואז דיון, מציגה את השיחה כאן כרצף תגובות עם שם העורך והתאריך בשוליים.</div></div>
   </section>
 </main>
-<div id="lightbox"><button id="lbClose" aria-label="סגירה">✕</button><div id="lbTitle"></div><div id="lbBody"></div></div>
+<div id="lightbox"><div id="lbCard"><div id="lbHead"><h3 id="lbTitle"></h3><button id="lbClose" aria-label="סגירה">✕</button></div><div id="lbBody"></div></div></div>
 <script>
 const $=s=>document.querySelector(s), esc=s=>s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
 const SIG=/(\d{1,2}:\d{2}),?\s+(\d{1,2}\s+ב?[א-ת]+\s+\d{4})\s+\((?:IST|IDT|UTC)\)/g;
@@ -143,7 +144,7 @@ const USER=/\[\[(?:משתמש|משתמשת|שיחת משתמש|שיחת משתמ
 let D, cur=null, curTh=null, sortK="comments", sortDir=-1, colorMode="emo";
 const EMO={agg:{c:"#B3402A",he:"תוקפנות"},con:{c:"#3E7C4F",he:"פיוס"},fru:{c:"#C08A1F",he:"תשישות"},neu:{c:"#98A5AB",he:"ניטרלי"}};
 const main=$("main");
-fetch("site/corpus.json?v=1788325830").then(r=>r.json()).then(d=>{D=d;
+fetch("site/corpus.json?v=1788326096").then(r=>r.json()).then(d=>{D=d;
   const A=d.articles, T=A.reduce((s,a)=>s+a.threads.length,0), C=A.reduce((s,a)=>s+a.threads.reduce((x,t)=>x+t.comments,0),0);
   $("#meta").textContent=`${A.length} ערכים · ${T} דיונים · ${C} תגובות חתומות · נבנה ${d.built}`;
   renderArts();});
@@ -192,7 +193,7 @@ function wiki(s){
 function showThread(i){
   curTh=i; const a=D.articles.find(x=>x.title===cur), t=a.threads[i]; renderThs();
   const url=`https://he.wikipedia.org/wiki/${encodeURIComponent(t.page)}#${encodeURIComponent(t.title.replace(/ /g,"_"))}`;
-  $("#reader").innerHTML=`<h3>${esc(t.title)}</h3><div class="sub">${esc(a.title)} · ${t.comments} תגובות חתומות · ${t.editors} עורכים${t.first?` · ${t.first} עד ${t.last}`:""}${t.q?` · איכות הגרסה (LLM, ניסיוני): דיוק ${t.q.accuracy}/7 · ביסוס ${t.q.sourcing}/7 · איזון ${t.q.neutrality}/7`:""}${t.link?` · בחלון הדיון: ${t.link.win_edits} עריכות, ${t.link.win_reverts} שחזורים · שחזור הבא ${t.link.post_days} ימים אחרי${t.link.censored?" (טרם)":""}`:""}<a href="${url}" target="_blank" rel="noopener">לדף המקור</a></div>
+  $("#reader").innerHTML=`<h3>${esc(t.title)}</h3><div class="sub">${esc(a.title)} · ${t.comments} תגובות חתומות · ${t.editors} עורכים${t.first?` · ${t.first} עד ${t.last}`:""}${t.q?` · איכות הגרסה (LLM, ניסיוני): דיוק ${t.q.accuracy}/7 · ביסוס ${t.q.sourcing}/7 · איזון ${t.q.neutrality}/7`:""}${t.link?` · בחלון הדיון: ${t.link.win_edits} עריכות, ${t.link.win_reverts} שחזורים · שחזור הבא ${t.link.post_days} ימים אחרי${t.link.censored?" (טרם)":""} · עוצמת הקישור דיון↔עריכות: <b>${{"high":"גבוהה","medium":"בינונית","low":"נמוכה"}[t.link.conf]}</b> (${t.link.score}/11)`:""}<a href="${url}" target="_blank" rel="noopener">לדף המקור</a></div>
   <div id="outcome"></div>
   <div class="tabs"><a href="#" id="tabTree" class="on">מבנה הדיון</a><a href="#" id="tabRaw">השיחה</a><span class="colorby">צבע לפי <a href="#" id="cbE">רגש</a><a href="#" id="cbU">עורך</a></span></div><div id="view"></div>`;
   $("#cbE").onclick=e=>{e.preventDefault();colorMode="emo";setTab(curTab,t)};
@@ -240,7 +241,7 @@ function renderOutcome(a,t){
   g+=`<text x="${W-pad}" y="${H-6}" font-size="11" fill="#6B7A83" text-anchor="end">תחילת הדיון · ${t.first}</text>`;
   g+=`<text x="${pad}" y="${H-6}" font-size="11" fill="${nxt?"#B3402A":"#3E7C4F"}" text-anchor="start">${nxt?"שחזור, כעבור "+t.link.post_days+" ימים":"היום — עדיין ללא שחזור ("+t.link.post_days+" ימים)"}</text>`;
   $("#outcome").innerHTML=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;direction:ltr">${g}</svg>`;
-  addExpand($("#outcome"),t.title+" — הדיון והתוצאה");
+  zoomable($("#outcome"),t.title+" — הדיון והתוצאה");
 }
 function renderRaw(t){
   $("#view").innerHTML=t.cmts.map(c=>`<div class="cmt ${c.signed?'':'unsigned'}" style="margin-inline-start:${Math.min(c.ind,8)*1.1}rem"><div class="body">${wiki(c.text)}</div><div class="who"><b><i class="edot" style="background:${EMO[c.emo.label].c}"></i>${esc(c.user||(c.signed?"?":"לא חתום"))}</b><span class="d">${c.date}</span></div></div>`).join("");
@@ -305,8 +306,8 @@ function renderStrip(a){
     g+=`<text x="${X(y+"-01-01").toFixed(1)}" y="${H-20}" font-size="9.5" fill="#9AA5AB" text-anchor="middle">${y}</text>`;
   $("#strip").innerHTML=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;direction:ltr" preserveAspectRatio="xMidYMid meet">${g}</svg>
   <div style="font-size:.78rem;color:var(--mute);line-height:1.5">מימין לשמאל: מראשית הערך עד היום. <span style="color:#2B6F8A">קו כחול — בנייה נטו: עולה עם כל עריכה, יורד עם כל שחזור</span>; מישורת או צניחה = מלחמת עריכה. <span style="color:#3E7C4F">ירוק מעל הקו</span>/<span style="color:#B3402A">אדום מתחתיו</span> — מאזן הרגש בדיונים באותו חודש (פיוס מול תוקפנות). <span style="color:#9C7A1E">◆ ציון דיוק (LLM) של גרסה שנבדקה</span>. כל פס תחתון = דיון אחד; לחיצה על פס או על ◆ פותחת את הדיון.</div>`;
-  addExpand($("#strip"),cur+" — ציר זמן");
-  document.querySelectorAll(".tmark").forEach(m=>m.onclick=()=>showThread(+m.dataset.i));
+  zoomable($("#strip"),cur+" — ציר זמן");
+  document.querySelectorAll(".tmark").forEach(m=>m.onclick=e=>{e.stopPropagation();showThread(+m.dataset.i);});
 }
 function renderTree(t){
   const C=t.cmts; if(!C.length){$("#view").innerHTML=`<div class="empty">אין תגובות מזוהות בדיון הזה.</div>`;return;}
@@ -340,8 +341,8 @@ function renderTree(t){
   }
   $("#view").innerHTML=`<div class="legend">${legend}</div>
   <svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" style="direction:ltr">${marks}${edges}${nodes}</svg><div id="snip"></div>`;
-  addExpand($("#view"),t.title+" — מבנה הדיון");
-  document.querySelectorAll(".node").forEach(n=>n.onclick=()=>{const c=C[+n.dataset.i];
+  zoomable($("#view"),t.title+" — מבנה הדיון");
+  document.querySelectorAll(".node").forEach(n=>n.onclick=e=>{e.stopPropagation();const c=C[+n.dataset.i];
     $("#snip").innerHTML=`<div class="snip" style="border-inline-start-color:${EMO[c.emo.label].c}"><div class="w">${esc(c.user||"לא חתום")} · ${c.date} ${c.time||""} · ${EMO[c.emo.label].he}</div>${wiki(c.text)}</div>`;});
 }
 document.querySelectorAll("th").forEach(h=>h.onclick=()=>{const k=h.dataset.k; if(sortK===k)sortDir*=-1; else{sortK=k;sortDir=k==="title"||k==="first"?1:-1;}
@@ -358,12 +359,11 @@ function openLB(svgEl,title){
 }
 $("#lbClose").onclick=()=>$("#lightbox").className="";
 $("#lightbox").onclick=e=>{if(e.target.id==="lightbox")$("#lightbox").className="";};
-function addExpand(container,title){
+document.addEventListener("keydown",e=>{if(e.key==="Escape")$("#lightbox").className="";});
+function zoomable(container,title){
   const svg=container.querySelector("svg"); if(!svg)return;
-  container.classList.add("vizbox");
-  const b=document.createElement("button"); b.className="expand"; b.textContent="⤢"; b.title="הגדלה";
-  b.onclick=e=>{e.stopPropagation();openLB(svg,title);};
-  container.insertBefore(b,container.firstChild);
+  svg.classList.add("zoomable"); svg.setAttribute("role","button");
+  svg.onclick=()=>openLB(svg,title);
 }
 // --- pane resize (desktop) ---
 (function(){
