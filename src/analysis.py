@@ -2,6 +2,8 @@
 Pipeline test only: every layer is v0 (lexicon emotions, window linking, LLM quality proxy).
 Outputs data/analysis.json and prints a summary. Modular: reads only site/corpus.json."""
 import json, math, pathlib, sys
+IMPL=sys.argv[1] if len(sys.argv)>1 else "lex"
+lab=lambda c:((c.get("emo_llm") or c["emo"]) if IMPL=="llm" else c["emo"])["label"]
 from datetime import datetime
 from scipy.stats import spearmanr, mannwhitneyu
 ROOT=pathlib.Path(__file__).resolve().parent.parent
@@ -14,7 +16,7 @@ for a in corpus["articles"]:
     base_rev=len(a["tl"]["rev"])/n_days  # reverts/day baseline
     for t in a["threads"]:
         if t["comments"]<5 or not t["link"]: continue
-        n=len(t["cmts"]); e=lambda lab: sum(1 for c in t["cmts"] if c["emo"]["label"]==lab)
+        n=len(t["cmts"]); e=lambda L: sum(1 for c in t["cmts"] if lab(c)==L)
         first=datetime.fromisoformat(t["first"]); last=datetime.fromisoformat(t["last"])
         win_days=(last-first).days+9
         expected=base_rev*win_days
@@ -24,18 +26,18 @@ for a in corpus["articles"]:
             win_rev=t["link"]["win_reverts"], excess_rev=t["link"]["win_reverts"]/expected if expected>0 else None,
             post_days=t["link"]["post_days"], censored=t["link"]["censored"],
             acc=t["q"]["accuracy"] if t.get("q") else None,
-            hx=t["dyn"]["hostile_exit_share"] if t.get("dyn") else None,
-            endc=t["dyn"]["ends_con"] if t.get("dyn") else None,
-            cont=t["dyn"]["contagion_r"] if t.get("dyn") else None,
+            hx=(t.get("dyn_llm") if IMPL=="llm" else t.get("dyn"))["hostile_exit_share"] if (t.get("dyn_llm") if IMPL=="llm" else t.get("dyn")) else None,
+            endc=(t.get("dyn_llm") if IMPL=="llm" else t.get("dyn"))["ends_con"] if (t.get("dyn_llm") if IMPL=="llm" else t.get("dyn")) else None,
+            cont=(t.get("dyn_llm") if IMPL=="llm" else t.get("dyn"))["contagion_r"] if (t.get("dyn_llm") if IMPL=="llm" else t.get("dyn")) else None,
             src=t["q"]["sourcing"] if t.get("q") else None))
-print(f"n={len(rows)} rich linked threads")
+print(f"[{IMPL}] n={len(rows)} rich linked threads")
 
 def sp(x,y,label):
     pairs=[(a,b) for a,b in zip(x,y) if a is not None and b is not None]
     if len(pairs)<8: print(f"{label}: n<8, skipped"); return None
     r,p=spearmanr(*zip(*pairs)); print(f"{label}: rho={r:+.2f} p={p:.3f} n={len(pairs)}")
     return dict(rho=round(r,3),p=round(p,4),n=len(pairs))
-res={"n":len(rows),"note":"v0 smoke test; all measurement layers provisional","tests":{}}
+res={"n":len(rows),"impl":IMPL,"note":"v0 smoke test; all measurement layers provisional","tests":{}}
 A=lambda k:[r[k] for r in rows]
 lp=[math.log10(r["post_days"]+1) for r in rows]
 res["tests"]["agg_vs_excess_rev"]=sp(A("agg"),A("excess_rev"),"aggression share vs excess in-window reverts")
@@ -67,7 +69,7 @@ al=[]
 for a in corpus["articles"]:
     cs=[c for t in a["threads"] for c in t["cmts"]]
     if not cs: continue
-    bal=sum({"agg":-1,"fru":-0.5,"con":1}.get(c["emo"]["label"],0) for c in cs)/len(cs)
+    bal=sum({"agg":-1,"fru":-0.5,"con":1}.get(lab(c),0) for c in cs)/len(cs)
     al.append((bal,a["stab"]["revert_rate"]))
 res["tests"]["article_balance_vs_revert"]=sp([x for x,_ in al],[y for _,y in al],"article sentiment balance vs revert rate")
-(ROOT/"data/analysis.json").write_text(json.dumps(res,ensure_ascii=False,indent=1))
+(ROOT/f"data/analysis_{IMPL}.json").write_text(json.dumps(res,ensure_ascii=False,indent=1))

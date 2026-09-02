@@ -60,6 +60,7 @@ for f in sorted((ROOT/"data").glob("*.json")):
         t["dyn"]=dynamics(t["cmts"])
         for ci,c in enumerate(t["cmts"]):
             c["emo_llm"]=LLM.get(f"{rec['article']}::{ti}::{ci}")
+        t["dyn_llm"]=dynamics(t["cmts"],"llm") if any(c.get("emo_llm") for c in t["cmts"]) else None
         _pk=f"{rec['article']}::{ti}::{t['title']}"
         _pq=PQ.get(_pk); _pr=PAIRS.get(_pk)
         _d={}
