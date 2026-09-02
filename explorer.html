@@ -18,6 +18,8 @@ a{color:var(--blue)}
 header{display:flex;align-items:baseline;gap:1.2rem;padding:.9rem 1.4rem .6rem;border-bottom:1px solid var(--line)}
 header h1{font-family:var(--serif);font-weight:500;font-size:1.35rem;margin:0}
 header .meta{color:var(--mute);font-size:.85rem}
+header .meta a.on{color:var(--ink);border-bottom:2px solid var(--blue);text-decoration:none}
+header .meta a{text-decoration:none}
 main{display:grid;grid-template-columns:19rem 6px 27rem 6px 1fr;height:calc(100% - 3.4rem)}
 .divider{cursor:col-resize;background:transparent;border-inline-start:1px solid var(--line)}
 .divider:hover{background:var(--blue-soft)}
@@ -114,7 +116,7 @@ svg text{font-family:var(--sans)}
 <body>
 <header>
   <h1><a href="./" style="color:inherit;text-decoration:none">דפי שיחה על בריאות הנפש</a></h1>
-  <span class="meta" id="meta">טוען…</span><span class="meta"><a href="method.html">איך זה עובד?</a></span>
+  <span class="meta" id="meta">טוען…</span><span class="meta">קידוד רגש: <a href="#" id="implLex" class="on">מילון</a> · <a href="#" id="implLlm">LLM</a></span><span class="meta"><a href="method.html">איך זה עובד?</a></span>
 </header>
 <main data-view="articles" id="mainGrid">
   <section id="arts">
@@ -149,10 +151,11 @@ svg text{font-family:var(--sans)}
 const $=s=>document.querySelector(s), esc=s=>s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
 const SIG=/(\d{1,2}:\d{2}),?\s+(\d{1,2}\s+ב?[א-ת]+\s+\d{4})\s+\((?:IST|IDT|UTC)\)/g;
 const USER=/\[\[(?:משתמש|משתמשת|שיחת משתמש|שיחת משתמשת|User|User talk):([^|\]#/]+)[^\]]*\]\]/;
-let D, cur=null, curTh=null, sortK="comments", sortDir=-1, colorMode="emo";
+let D, cur=null, curTh=null, sortK="comments", sortDir=-1, colorMode="emo", emoImpl="lex";
+const emoOf=c=>(emoImpl==="llm"&&c.emo_llm)?c.emo_llm:c.emo;
 const EMO={agg:{c:"#B3402A",he:"תוקפנות"},con:{c:"#3E7C4F",he:"פיוס"},fru:{c:"#C08A1F",he:"תשישות"},neu:{c:"#98A5AB",he:"ניטרלי"}};
 const main=$("main");
-fetch("site/corpus.json?v=1788340615").then(r=>r.json()).then(d=>{D=d;
+fetch("site/corpus.json?v=1788340835").then(r=>r.json()).then(d=>{D=d;
   const A=d.articles, T=A.reduce((s,a)=>s+a.threads.length,0), C=A.reduce((s,a)=>s+a.threads.reduce((x,t)=>x+t.comments,0),0);
   $("#meta").textContent=`${A.length} ערכים · ${T} דיונים · ${C} תגובות חתומות · נבנה ${d.built}`;
   renderArts();});
@@ -257,7 +260,7 @@ function renderOutcome(a,t){
   // reverts inside window
   revAll.filter(x=>x>=w0&&x<w1).forEach(x=>g+=`<line x1="${X(x)}" x2="${X(x)}" y1="${y0-15}" y2="${y0+15}" stroke="#B3402A" stroke-width="1.6" opacity="0.85"/>`);
   // comments as emotion dots
-  t.cmts.filter(c=>c.date).forEach(c=>g+=`<circle cx="${X(d(c.date))}" cy="${y0}" r="4.5" fill="${EMO[c.emo.label].c}" stroke="#fff" stroke-width="1"/>`);
+  t.cmts.filter(c=>c.date).forEach(c=>g+=`<circle cx="${X(d(c.date))}" cy="${y0}" r="4.5" fill="${EMO[emoOf(c).label].c}" stroke="#fff" stroke-width="1"/>`);
   // next revert
   if(nxt)g+=`<line x1="${X(nxt)}" x2="${X(nxt)}" y1="${y0-18}" y2="${y0+18}" stroke="#B3402A" stroke-width="3"/>`;
   // endpoint labels
@@ -282,7 +285,7 @@ function renderOutcome(a,t){
   zoomable($("#outcome"),t.title+" — הדיון והתוצאה");
 }
 function renderRaw(t){
-  $("#view").innerHTML=t.cmts.map(c=>`<div class="cmt ${c.signed?'':'unsigned'}" style="margin-inline-start:${Math.min(c.ind,8)*1.1}rem"><div class="body">${wiki(c.text)}</div><div class="who"><b><i class="edot" style="background:${EMO[c.emo.label].c}"></i>${esc(c.user||(c.signed?"?":"לא חתום"))}</b><span class="d">${c.date}</span></div></div>`).join("");
+  $("#view").innerHTML=t.cmts.map(c=>`<div class="cmt ${c.signed?'':'unsigned'}" style="margin-inline-start:${Math.min(c.ind,8)*1.1}rem"><div class="body">${wiki(c.text)}</div><div class="who"><b><i class="edot" style="background:${EMO[emoOf(c).label].c}"></i>${esc(c.user||(c.signed?"?":"לא חתום"))}</b><span class="d">${c.date}</span></div></div>`).join("");
 }
 function editorColors(cmts){
   const eds=[...new Set(cmts.filter(c=>c.user).map(c=>c.user))];
@@ -306,15 +309,7 @@ function renderStrip(a){
   const cMax=Math.max(...cum,1), cMin=Math.min(...cum,0);
   const H1=72, y1=(v)=>8+(cMax-v)/(cMax-cMin||1)*(H1-16);
   let line="M "+cum.map((v,i)=>`${Xi(i).toFixed(1)} ${y1(v).toFixed(1)}`).join(" L ");
-  // sentiment balance per month (3-month smoothed)
-  const val=new Array(nM).fill(0);
-  a.threads.forEach(t=>t.cmts.forEach(cm=>{if(!cm.date)return;const w={agg:-1,fru:-0.5,con:1,neu:0}[cm.emo.label];if(w)val[mIdx(cm.date)]+=w;}));
-  const sm=val.map((_,i)=>{let s=0,n=0;for(let k=Math.max(0,i-1);k<=Math.min(nM-1,i+1);k++){s+=val[k];n++;}return s/n;});
-  const sMax=Math.max(...sm.map(Math.abs),1);
-  const H2=44, z=H1+10+H2/2, ys=v=>z-v/sMax*(H2/2-4);
-  let sent="";
-  sm.forEach((v,i)=>{if(Math.abs(v)<1e-6)return;
-    sent+=`<rect x="${(Xi(i)-plotW/nM/2).toFixed(1)}" y="${Math.min(z,ys(v)).toFixed(1)}" width="${(plotW/nM).toFixed(2)}" height="${Math.abs(z-ys(v)).toFixed(1)}" fill="${v>0?"#3E7C4F":"#B3402A"}" opacity="0.75" shape-rendering="crispEdges"/>`;});
+  const H2=0, z=H1+4;
   // quality diamonds on top panel
   let qmarks="";
   const qxs={};
@@ -323,25 +318,24 @@ function renderStrip(a){
     const x=x0, y=Math.max(20,Math.min(H1-12,y1(cum[m])-10))-bump*13;
     qmarks+=`<g class="tmark" data-i="${i}" data-ts="${t.q.rev_ts.slice(0,10)}" style="cursor:pointer"><path d="M ${x} ${y-6} l 5 6 l -5 6 l -5 -6 z" fill="#C08A1F" stroke="#fff" stroke-width="1"><title>איכות (LLM): דיוק ${t.q.accuracy}/7 — ${esc(t.title)}</title></path><text x="${x}" y="${y-9}" font-size="8.5" fill="#9C7A1E" text-anchor="middle">${t.q.accuracy}</text></g>`;});
   // discussion lanes
-  const yL=H1+10+H2+12;
+  const yL=H1+14;
   const ths=a.threads.map((t,i)=>({t,i})).filter(x=>x.t.first).sort((x,y)=>x.t.first<y.t.first?-1:1);
   const lanes=[]; const laneH=11;
   const items=ths.map(x=>{const e=X(x.t.first),ss=Math.min(X(x.t.last||x.t.first),e-4);
     let L=lanes.findIndex(v=>v>e+2); if(L<0){L=lanes.length;lanes.push(1e9);} lanes[L]=ss;
-    const n={agg:0,con:0,fru:0}; x.t.cmts.forEach(c=>{if(c.emo.label!=="neu")n[c.emo.label]++});
+    const n={agg:0,con:0,fru:0}; x.t.cmts.forEach(c=>{if(emoOf(c).label!=="neu")n[emoOf(c).label]++});
     const dom=Object.keys(n).sort((p,q)=>n[q]-n[p])[0];
     return {...x,s:ss,e,L,col:n[dom]>0?EMO[dom].c:"#8FA0A8"};});
   let marks=items.map(x=>`<line class="tmark" data-i="${x.i}" x1="${x.s.toFixed(1)}" x2="${x.e.toFixed(1)}" y1="${yL+x.L*laneH}" y2="${yL+x.L*laneH}" stroke="${x.col}" stroke-width="6" stroke-linecap="round" style="cursor:pointer"><title>${esc(x.t.title)} — ${x.t.comments} תגובות</title></line>`).join("");
   const H=yL+lanes.length*laneH+34;
   let g=`<path d="${line}" fill="none" stroke="#2B6F8A" stroke-width="1.8"/>`;
-  g+=`<line x1="${X(m1)}" x2="${X(m0)}" y1="${z}" y2="${z}" stroke="#C8D0CD"/>`+sent+marks;
+  g+=marks;
   g+=`<line x1="${X(m0)}" x2="${X(m1)+8}" y1="${H-14}" y2="${H-14}" stroke="#8B99A0" stroke-width="1.3"/>`;
   g+=`<path d="M ${X(m1)+9} ${H-18.5} L ${X(m1)} ${H-14} L ${X(m1)+9} ${H-9.5}" fill="none" stroke="#8B99A0" stroke-width="1.3"/>`;
   g+=`<text x="${X(m0)}" y="${H-2}" font-size="9.5" fill="#6B7A83" text-anchor="start">יצירת הערך</text>`;
   g+=`<text x="${X(m1)+2}" y="${H-2}" font-size="9.5" fill="#6B7A83" text-anchor="start">היום</text>`;
   g+=qmarks;
   g+=`<text x="${W-2}" y="${8+10}" font-size="10" fill="#2B6F8A" text-anchor="end">בנייה נטו</text>`;
-  g+=`<text x="${W-2}" y="${z+3}" font-size="10" fill="#6B7A83" text-anchor="end">מאזן רגשי</text>`;
   g+=`<text x="${W-2}" y="${yL+6}" font-size="10" fill="#6B7A83" text-anchor="end">דיונים</text>`;
   const yrStep=W<560?4:2;
   for(let y=new Date(m0).getFullYear()+1;y<=new Date(m1).getFullYear();y+=yrStep)
@@ -350,10 +344,9 @@ function renderStrip(a){
   $("#strip").innerHTML=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;direction:ltr">${g}<rect id="dimA" x="0" y="0" width="0" height="${H-24}" fill="#EDF0EE" opacity="0.82"/><line id="curA" x1="-9" x2="-9" y1="0" y2="${H-18}" stroke="#16232B" stroke-width="1.2" stroke-dasharray="2 3"/></svg>
   <div class="vizctl"><button id="playA" title="הרצה">▶</button><input type="range" id="sliderA" min="0" max="${nM-1}" value="${nM-1}"><span class="tlab" id="tlabA">היום</span></div>
   <details class="help"><summary>מה רואים כאן?</summary>
-  שלוש שכבות על ציר זמן אחד, מימין (יצירת הערך) לשמאל (היום):<br>
+  שתי שכבות על ציר זמן אחד, מימין (יצירת הערך) לשמאל (היום):<br>
   <b>בנייה נטו</b> (קו כחול) — מונה מצטבר: כל עריכה בערך מוסיפה 1, כל שחזור (חזרה מדויקת לגרסה קודמת) מוריד 2, כי הוא מוחק עריכה וגם נספר בעצמו. עלייה = בנייה; מישורת/צניחה = מלחמת עריכה. <b>◆ כתום</b> — ציון דיוק (1–7) שנתן מודל שפה לגרסת הערך שאחרי דיון שנבדק.<br>
-  <b>מאזן רגשי</b> — לכל חודש, סכום על <i>כל</i> התגובות בדפי השיחה באותו חודש: פיוס +1, תוקפנות −1, תשישות −0.5 (סיווג מילוני ראשוני), בהחלקה של 3 חודשים. ירוק מעל הקו = חודש פייסני, אדום מתחתיו = חודש עוין.<br>
-  <b>דיונים</b> — אותן תגובות בדיוק, אבל מקובצות אחרת: כל פס = דיון אחד לאורך תקופת פעילותו, וצבעו = הרגש הלא-ניטרלי הנפוץ בו. כלומר: המאזן מסכם לפי חודש, הפסים מסכמים לפי דיון — שתי הצגות של אותם נתונים. לחיצה על פס פותחת את הדיון.<br>
+  <b>דיונים</b> — כל פס = דיון אחד בדף השיחה לאורך תקופת פעילותו; צבעו = הרגש הלא-ניטרלי הנפוץ בתגובותיו, לפי קידוד הרגש שנבחר בראש העמוד (מילון או LLM; במקום שאין קידוד LLM מוצג המילון). לחיצה על פס פותחת את הדיון.<br>
   הסליידר מזיז "עכשיו" לאורך ההיסטוריה; ▶ מריץ אותה כסרטון.
   </details>`;
   const dimA=$("#strip").querySelector("#dimA"), curA=$("#strip").querySelector("#curA");
@@ -378,7 +371,7 @@ function renderTree(t){
   const W=Math.max(320,Math.min(($("#rd").clientWidth||window.innerWidth)-40,760)), H=C.length*row+pad*2;
   const x=c=>W-pad-R-Math.min(c.ind,12)*step, y=i=>pad+R+i*row;
   const rad=c=>Math.max(6,Math.min(13,4+2.2*Math.sqrt(c.text.length/120)));
-  const fillOf=c=>colorMode==="emo"?EMO[c.emo.label].c:(c.user?col[c.user]:"#FFFFFF");
+  const fillOf=c=>colorMode==="emo"?EMO[emoOf(c).label].c:(c.user?col[c.user]:"#FFFFFF");
   let edges="",nodes="",marks="";
   let prevYear="";
   C.forEach((c,i)=>{
@@ -396,8 +389,9 @@ function renderTree(t){
   });
   let legend;
   if(colorMode==="emo"){
-    const n={agg:0,con:0,fru:0,neu:0}; C.forEach(c=>n[c.emo.label]++);
-    legend=Object.keys(EMO).map(k=>`<span>${EMO[k].he} (${n[k]})<i style="background:${EMO[k].c}"></i></span>`).join("")+`<span style="font-size:.72rem">· סיווג מילוני ראשוני, יוחלף בקידוד מלא</span>`;
+    const n={agg:0,con:0,fru:0,neu:0}; C.forEach(c=>n[emoOf(c).label]++);
+    const cov=C.filter(c=>c.emo_llm).length;
+    legend=Object.keys(EMO).map(k=>`<span>${EMO[k].he} (${n[k]})<i style="background:${EMO[k].c}"></i></span>`).join("")+`<span style="font-size:.72rem">· ${emoImpl==="llm"?(cov?`קידוד LLM (${cov}/${C.length} תגובות)`:"אין קידוד LLM לדיון זה — מוצג המילון"):"קידוד מילוני"}</span>`;
   } else {
     legend=eds.slice(0,14).map(e=>`<span>${esc(e)}<i style="background:${col[e]}"></i></span>`).join("")+(eds.length>14?` <span>+${eds.length-14}</span>`:"")+(C.some(c=>!c.user)?'<span>לא מזוהה<i style="background:#fff;border:1px solid #B4BDC2"></i></span>':"");
   }
@@ -408,13 +402,16 @@ function renderTree(t){
   zoomable($("#view"),t.title+" — מבנה הדיון");
   if(RD)setTR($("#sliderR").value);
   document.querySelectorAll(".node").forEach(n=>n.onclick=e=>{e.stopPropagation();const c=C[+n.dataset.i];
-    $("#snip").innerHTML=`<div class="snip" style="border-inline-start-color:${EMO[c.emo.label].c}"><div class="w">${esc(c.user||"לא חתום")} · ${c.date} ${c.time||""} · ${EMO[c.emo.label].he}</div>${wiki(c.text)}</div>`;});
+    $("#snip").innerHTML=`<div class="snip" style="border-inline-start-color:${EMO[emoOf(c).label].c}"><div class="w">${esc(c.user||"לא חתום")} · ${c.date} ${c.time||""} · ${EMO[emoOf(c).label].he}</div>${wiki(c.text)}</div>`;});
 }
 document.querySelectorAll("th").forEach(h=>h.onclick=()=>{const k=h.dataset.k; if(sortK===k)sortDir*=-1; else{sortK=k;sortDir=k==="title"||k==="first"?1:-1;}
   document.querySelectorAll("th").forEach(x=>x.className=""); h.className=sortDir>0?"asc":"desc"; renderThs();});
 $("#q").oninput=renderThs; $("#min").oninput=e=>{$("#minV").textContent=e.target.value;renderThs();};
 
 $("#fCore").onchange=$("#fAdj").onchange=renderArts;
+function setImpl(v){emoImpl=v;$("#implLex").className=v==="lex"?"on":"";$("#implLlm").className=v==="llm"?"on":"";
+  if(cur){renderThs();} if(cur&&curTh!==null){showThread(curTh);}}
+$("#implLex").onclick=e=>{e.preventDefault();setImpl("lex");}; $("#implLlm").onclick=e=>{e.preventDefault();setImpl("llm");};
 document.querySelectorAll(".back").forEach(b=>b.onclick=e=>{e.preventDefault();main.dataset.view=b.dataset.to;});
 
 // --- lightbox ---
