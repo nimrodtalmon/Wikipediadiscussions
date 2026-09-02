@@ -1,6 +1,7 @@
 """Build docs/data/corpus.json for the GitHub Pages explorer from data/*.json."""
 import json, re, pathlib
 from parse_threads import threads as split_threads, SIG, USER
+from emotion import score as emo_score
 ROOT=pathlib.Path(__file__).resolve().parent.parent
 MONTHS={m:i+1 for i,m in enumerate("ינואר פברואר מרץ אפריל מאי יוני יולי אוגוסט ספטמבר אוקטובר נובמבר דצמבר".split())}
 def iso(d):
@@ -14,7 +15,7 @@ def comments(body):
         if not buf: return
         raw="\n".join(buf)
         us=USER.findall(raw); sg=SIG.findall(raw)
-        out.append({"ind":ind,"user":us[-1].strip() if us else "","date":iso(sg[-1][1]) if sg else "","time":sg[-1][0] if sg else "","signed":signed,"text":raw})
+        out.append({"ind":ind,"user":us[-1].strip() if us else "","date":iso(sg[-1][1]) if sg else "","time":sg[-1][0] if sg else "","signed":signed,"text":raw,"emo":emo_score(raw)})
         buf=[]
     import re as _re
     for l in body.split("\n"):
