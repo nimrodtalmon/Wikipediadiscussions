@@ -54,7 +54,7 @@ p{margin:.4rem 0}
 <p class="foot" id="built"></p>
 </div>
 <script>
-fetch("site/corpus.json?v=1788322653").then(r=>r.json()).then(d=>{const A=d.articles,T=A.flatMap(a=>a.threads);
+fetch("site/corpus.json?v=1788322896").then(r=>r.json()).then(d=>{const A=d.articles,T=A.flatMap(a=>a.threads);
 const v=[A.length,T.length,T.reduce((s,t)=>s+t.comments,0),T.filter(t=>t.comments>=5).length];
 document.querySelectorAll("#stats b").forEach((b,i)=>b.textContent=v[i]);
 document.getElementById("built").textContent="נתונים נמשכו מוויקיפדיה העברית ב-"+d.built+".";});
