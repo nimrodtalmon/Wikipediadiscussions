@@ -52,7 +52,7 @@ let D, sortK="talk_revs", sortDir=-1;
 const KEY="wiki-emotions-curation";
 const sel=new Set(JSON.parse(localStorage.getItem(KEY)||"[]"));
 function save(){localStorage.setItem(KEY,JSON.stringify([...sel]));}
-fetch("site/candidates.json?v=1788327145").then(r=>r.json()).then(d=>{D=d;
+fetch("site/candidates.json?v=1788328560").then(r=>r.json()).then(d=>{D=d;
   if(!localStorage.getItem(KEY)) d.rows.forEach(r=>{if(r.seed)sel.add(r.title);});
   save();
   $("#meta").textContent=`${d.rows.length} מועמדים עם דף שיחה מעל ${d.min_talk_bytes/1000} ק"ב · נסרק ${d.built}`;

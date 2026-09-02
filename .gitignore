@@ -2,3 +2,5 @@ data/*.json
 !data/quality.json
 __pycache__/
 !data/validation_sample.csv
+!data/pair_quality.json
+!data/pairs.json
