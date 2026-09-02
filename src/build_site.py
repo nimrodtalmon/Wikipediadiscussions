@@ -47,9 +47,9 @@ for f in sorted((ROOT/"data").glob("*.json")):
         for meta,body in zip(split_threads(tp["text"]),thread_bodies(tp["text"])):
             ths.append({**meta,"first":iso(meta["first"]),"last":iso(meta["last"]),"page":tp["title"],"text":body.strip(),"cmts":comments(body.strip())})
     rs,flags=identity_flags(rec["article_revs"])
-    for t in ths:
+    for ti,t in enumerate(ths):
         t["link"]=link(rs,flags,t)
-        t["q"]=Q.get(f"{rec['article']}::{t['page']}::{t['title']}")
+        _qv=Q.get(f"{rec['article']}::{ti}::{t['title']}"); t["q"]=_qv if _qv and "accuracy" in _qv else None
     months=Counter(r["timestamp"][:7] for r in rs)
     m0=rs[0]["timestamp"][:7]; mN=__import__("time").strftime("%Y-%m")
     def _mrange(a,b):
