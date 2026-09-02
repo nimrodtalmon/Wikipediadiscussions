@@ -19,5 +19,320 @@
 "better": "self",
 "note": "תיקון-עצמי של אותו עורך; לא רלוונטי לשאלת שחזור-כנגד-אחר.",
 "model": "claude-session"
+},
+"אוטיזם::1::בקשת הסבר מכותבי הערך": {
+"kept_acc": 5,
+"discarded_acc": 4,
+"better": "kept",
+"note": "השחזור החזיר תיאור מלא וניטרלי של המודל הרפואי במקום קביעה גורפת ('אינו מקובל היום').",
+"model": "claude-session"
+},
+"אוטיזם::5::אוטיזם בצבא": {
+"kept_acc": 5,
+"discarded_acc": 4,
+"better": "kept",
+"note": "הוסרה פסקת שיעור-פשיעה שנשענה על היסק מקורי ממקור שלא תומך בטענה (סומנה כך בתבנית).",
+"model": "claude-session"
+},
+"אוטיזם::38::שם הערך 2019": {
+"kept_acc": 5,
+"discarded_acc": 2,
+"better": "kept",
+"note": "הגרסה שנמחקה כללה ונדליזם ('אוטיזם זה צ'יזי מן'); שחזור מוצדק.",
+"model": "claude-session"
+},
+"אוטיזם::45::שינוי שם?": {
+"kept_acc": null,
+"discarded_acc": null,
+"better": "self",
+"note": "פעולת איחוד/הפניה של אותו עורך במסגרת ארגון מחדש; לא שחזור-כנגד-אחר.",
+"model": "claude-session"
+},
+"אוטיזם::46::סיכום ביניים": {
+"kept_acc": null,
+"discarded_acc": null,
+"better": "self",
+"note": "כנ\"ל — אותה פעולת איחוד.",
+"model": "claude-session"
+},
+"אוטיזם::47::שם הערך לאחר השינוי": {
+"kept_acc": 6,
+"discarded_acc": 2,
+"better": "kept",
+"note": "הגרסה שנמחקה שיבשה את שם הערך בתיבת המידע ('אוטיזם ולרוייה'); שחזור מוצדק.",
+"model": "claude-session"
+},
+"אוטיזם::48::טיפולים": {
+"kept_acc": null,
+"discarded_acc": null,
+"better": "self",
+"note": "אותה פעולת איחוד/הפניה עצמית.",
+"model": "claude-session"
+},
+"אוטיזם::51::תוחלת חיים": {
+"kept_acc": null,
+"discarded_acc": null,
+"better": "unclear",
+"note": "האזור שהשתנה לא אותר בקטע שנשלף; דורש שליפה ממוקדת יותר.",
+"model": "claude-session"
+},
+"אוטיזם::53::שימוש בביטוי \"הספקטרום האוטיסטי\" במקום \"אוטיסט\"": {
+"kept_acc": 6,
+"discarded_acc": 2,
+"better": "kept",
+"note": "הגרסה שנמחקה כללה ונדליזם ('דביר הוא ההגדרה') ומבנה ישן; הקיימת מעוגנת DSM-5.",
+"model": "claude-session"
+},
+"אוטיזם::55::הבהרות": {
+"kept_acc": null,
+"discarded_acc": null,
+"better": "unclear",
+"note": "האזור שהשתנה לא אותר בקטע שנשלף.",
+"model": "claude-session"
+},
+"אוטיזם::58::דיון": {
+"kept_acc": null,
+"discarded_acc": null,
+"better": "unclear",
+"note": "האזור שהשתנה לא אותר בקטע שנשלף.",
+"model": "claude-session"
+},
+"אוטיזם::61::\"לא\" בלשון עבר ועתיד": {
+"kept_acc": null,
+"discarded_acc": null,
+"better": "unclear",
+"note": "האזור שהשתנה לא אותר בקטע שנשלף.",
+"model": "claude-session"
+},
+"אוטיזם::65::בעד הוספה": {
+"kept_acc": null,
+"discarded_acc": null,
+"better": "unclear",
+"note": "האזור שהשתנה לא אותר בקטע שנשלף.",
+"model": "claude-session"
+},
+"גזלייטינג::4::שינוי שם ל\"גזלייטינג\"": {
+"kept_acc": 5,
+"discarded_acc": 4,
+"better": "kept",
+"note": "הוחלף פרק מקרה-פרטי רגיש (פרשת עוז, שאלת משקל ראוי) בפרק תופעתי על גזלייטינג בעבודה עם מקור אקדמי.",
+"model": "claude-session"
+},
+"גזלייטינג::5::דבר שמתחפש לאהבה": {
+"kept_acc": 5,
+"discarded_acc": 4,
+"better": "kept",
+"note": "אותו שחזור — זה בדיוק המקרה שנדון בדיון הסוער; ההסרה מוצדקת משיקולי משקל, אך מחקה תוכן ממוסמך.",
+"model": "claude-session"
+},
+"דיכאון קליני::13::קישור חיצוני": {
+"kept_acc": 5,
+"discarded_acc": 4,
+"better": "kept",
+"note": "הוסר קישור חיצוני שיווקי-למחצה; גיזום סביר.",
+"model": "claude-session"
+},
+"דיספוריה מגדרית::10::פרק \"היסטוריה\"": {
+"kept_acc": 4,
+"discarded_acc": 4,
+"better": "tie",
+"note": "השחזור מחק יחד גם היסטוריית DSM סבירה וגם תת-פרק 'קבלי' בגדר מחקר מקורי — מוצדק חלקית בלבד.",
+"model": "claude-session"
+},
+"הפרעה טורדנית-כפייתית::11::הטעיה רפואית": {
+"kept_acc": 6,
+"discarded_acc": 4,
+"better": "kept",
+"note": "הוסרה הערה פולמוסית ('ז'רגון עממי ומיושן') מתוך משפט הפתיחה.",
+"model": "claude-session"
+},
+"הפרעה טורדנית-כפייתית::12::שינוי ההגדרה של ocd להפרעה נוירולוגית/של תפקוד המוח": {
+"kept_acc": 4,
+"discarded_acc": 5,
+"better": "discarded",
+"note": "הגרסה שנמחקה ציינה CBT בשילוב טיפול תרופתי (מדויק קלינית, עם נופך פרסומי); זו שנשמרה מסתפקת ב'טיפול פסיכולוגי' — פחות מדויקת. מועמד ראשון לשחזור שגוי.",
+"model": "claude-session"
+},
+"הפרעה נפשית::1::מה אנשי המקצוע עושים ?": {
+"kept_acc": 5,
+"discarded_acc": 5,
+"better": "tie",
+"note": "הוסר קישור לעמותת תמיכה (ממ\"ן); גיזום ניטרלי, ללא הבדל מהותי.",
+"model": "claude-session"
+},
+"הפרעה נפשית::9::שמות חלופיים בעברית": {
+"kept_acc": null,
+"discarded_acc": null,
+"better": "self",
+"note": "עריכת כיתוב תמונה של אותו עורך.",
+"model": "claude-session"
+},
+"הפרעת אישיות גבולית::13::דיון": {
+"kept_acc": 6,
+"discarded_acc": 5,
+"better": "kept",
+"note": "תיקון קישור/עיצוב שבור בטקסט זהה תוכנית.",
+"model": "claude-session"
+},
+"הפרעת חרדה::0::ההתקף אינו טראומטי": {
+"kept_acc": 3,
+"discarded_acc": 5,
+"better": "discarded",
+"note": "שחזור שגוי מובהק: עורך אנונימי הסיר את המשפט הלא-מדויק 'ההתקף הוא טראומטי', והשחזור החזיר אותו — בדיוק הטענה שבדיון, והמשפט שרד שנים (ראו M7a).",
+"model": "claude-session"
+},
+"הפרעת קשב ופעלתנות יתר::10::שם הערך": {
+"kept_acc": null,
+"discarded_acc": null,
+"better": "unclear",
+"note": "בגרסה שנשמרה מופיעים ראשי תיבות בדויים ('NOAM') החשודים כוונדליזם ששרד; ההשוואה חלקית בשל קטיעת הקטע.",
+"model": "claude-session"
+},
+"הפרעת קשב ופעלתנות יתר::25::פסקה שהוסרה": {
+"kept_acc": 5,
+"discarded_acc": 1,
+"better": "kept",
+"note": "הגרסה שנמחקה הייתה שורת מחאה במקום הפתיח; שחזור מוצדק מובהק.",
+"model": "claude-session"
+},
+"הפרעת קשב ופעלתנות יתר::34::מחיקת תוספת - הסבר": {
+"kept_acc": 4,
+"discarded_acc": 3,
+"better": "kept",
+"note": "שתי הגרסאות חלשות: שנמחקה סיווגה תרופות שגוי (וולבוטרין כ-SSRI), שנשמרה מרחיבה את תאוריית 'צייד בעולם של חקלאים' הספקולטיבית.",
+"model": "claude-session"
+},
+"הפרעת קשב ופעלתנות יתר::36::מפעיל מערכת שחורג מסמכות -העתקה מדלפק היעוץ": {
+"kept_acc": 6,
+"discarded_acc": 5,
+"better": "kept",
+"note": "דיוק טרמינולוגי: PDD הוא המונח הנכון בהקשר קריטריוני DSM-IV.",
+"model": "claude-session"
+},
+"הפרעת קשב ופעלתנות יתר::45::[[הפרעת קשב, ריכוז והיפראקטיביות]]": {
+"kept_acc": null,
+"discarded_acc": null,
+"better": "unclear",
+"note": "האזור שהשתנה לא אותר בקטע שנשלף.",
+"model": "claude-session"
+},
+"התאבדות::4::רשימת מתאבדים מפורסמים": {
+"kept_acc": null,
+"discarded_acc": null,
+"better": "self",
+"note": "הסרת שורת קטגוריה על ידי אותו עורך.",
+"model": "claude-session"
+},
+"התאבדות::9::סוקרטס והתאבדות?": {
+"kept_acc": 5,
+"discarded_acc": 4,
+"better": "kept",
+"note": "תוקן משפט קטוע ('תחת') בפתיח.",
+"model": "claude-session"
+},
+"סכיזופרניה::2::מה זה כרוני?": {
+"kept_acc": 6,
+"discarded_acc": 1,
+"better": "kept",
+"note": "הגרסה שנמחקה הושחתה קשות (הערות אנטי-פסיכיאטריות בגוף הפתיח); שחזור הכרחי.",
+"model": "claude-session"
+},
+"סכיזופרניה::9::המודל הביולוגי רפואי": {
+"kept_acc": null,
+"discarded_acc": null,
+"better": "self",
+"note": "עריכת קישור עצמית.",
+"model": "claude-session"
+},
+"סכיזופרניה::16::דיון": {
+"kept_acc": 6,
+"discarded_acc": 2,
+"better": "kept",
+"note": "הוסרה תוספת עריכתית לא ממוסמכת ('חווה אמת גדולה יותר... יירמס'); הוחזר טקסט היסטוריה.",
+"model": "claude-session"
+},
+"סכיזופרניה::18::הערך דורש טיפול": {
+"kept_acc": null,
+"discarded_acc": null,
+"better": "unclear",
+"note": "האזור שהשתנה לא אותר בקטע שנשלף.",
+"model": "claude-session"
+},
+"סכיזופרניה::34::מחלת נפש": {
+"kept_acc": 6,
+"discarded_acc": 1,
+"better": "kept",
+"note": "אותו שחזור ונדליזם כמו בדיון 'מה זה כרוני'.",
+"model": "claude-session"
+},
+"סכיזופרניה::40::פרטי הדיווח": {
+"kept_acc": 5,
+"discarded_acc": 5,
+"better": "tie",
+"note": "הבדל כתיב בלבד (שעור/שיעור).",
+"model": "claude-session"
+},
+"סכיזופרניה::41::[[קובץ:Article Adding.svg|25px]] הוספה: [[סכיזופרניה]]": {
+"kept_acc": 6,
+"discarded_acc": 2,
+"better": "kept",
+"note": "אותה הסרת תוספת עריכתית לא ממוסמכת.",
+"model": "claude-session"
+},
+"פדופיליה::0::תקנו אותי אם אני טועה": {
+"kept_acc": 5,
+"discarded_acc": 3,
+"better": "kept",
+"note": "הוסר בלוק עצומה שבור; ניקוי מוצדק.",
+"model": "claude-session"
+},
+"פדופיליה::5::עריכה שונתה בערך": {
+"kept_acc": 6,
+"discarded_acc": 1,
+"better": "kept",
+"note": "הוסר קישור לאתר תעמולה פדופילי ('Israeli BoyLover'); שחזור הכרחי.",
+"model": "claude-session"
+},
+"פסיכופתיה::16::דיון": {
+"kept_acc": 5,
+"discarded_acc": 4,
+"better": "kept",
+"note": "הוסר מסגור '(אנטי סוציאליות)' לא סטנדרטי מהפתיח; השוואה חלקית (הקטע נקטע).",
+"model": "claude-session"
+},
+"פסיכופתיה::31::הוספה: [[פסיכופתיה]]": {
+"kept_acc": 5,
+"discarded_acc": 4,
+"better": "kept",
+"note": "אותו שחזור.",
+"model": "claude-session"
+},
+"פסיכופתיה::29::פסיכופתיה כמבנה": {
+"kept_acc": null,
+"discarded_acc": null,
+"better": "unclear",
+"note": "הדיון עסק במסגור 'מבנה' מול 'הפרעת אישיות' — בדיוק תוכן השחזור, אך הקטע שנשלף נקטע לפני הגרסה שנשמרה; דורש שליפה ממוקדת.",
+"model": "claude-session"
+},
+"פסיכותרפיה::2::שם הערך": {
+"kept_acc": 5,
+"discarded_acc": 4,
+"better": "kept",
+"note": "הוסר קישור חיצוני קידומי (מכון פרטי, ככל הנראה קידום-עצמי של המוסיף).",
+"model": "claude-session"
+},
+"פסיכותרפיה::3::אני חושב שראוי להוסיף מידע על ההסמכה לעיסוק בפסיכותרפיה": {
+"kept_acc": 6,
+"discarded_acc": 2,
+"better": "kept",
+"note": "הוסר ספאם-קישור שהוטמע בגוף משפט הפתיחה.",
+"model": "claude-session"
+},
+"פסיכותרפיה::13::תיאור מצב חוקי וטענות ללא מקור": {
+"kept_acc": 6,
+"discarded_acc": 4,
+"better": "kept",
+"note": "הגרסה שנשמרה מפורטת וממוסמכת יותר (כולל רע\"א 3750/10 והמחלוקת בפסיקה).",
+"model": "claude-session"
 }
 }
