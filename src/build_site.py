@@ -49,7 +49,7 @@ for f in sorted((ROOT/"data").glob("*.json")):
     arts.append({"title":rec["article"],"ring":seeds.get(rec["article"],"adjacent" if rec["article"] in seeds else "core"),
                  "talk_revs":sum(len(t["revs"] or []) for t in rec["talk_pages"]),"article_revs":len(rec["article_revs"]),
                  "archives":len(rec["talk_pages"])-1,"threads":ths,"stab":stab(rec["article_revs"])})
-out={"built":__import__("datetime").date.today().isoformat(),"articles":arts}
+out={"built":__import__("time").strftime("%Y-%m-%d %H:%M"),"articles":arts}
 (ROOT/"site/corpus.json").write_text(json.dumps(out,ensure_ascii=False))
 import re as _re, time as _time
 stamp=str(int(_time.time()))

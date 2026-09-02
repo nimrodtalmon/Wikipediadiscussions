@@ -75,6 +75,9 @@ svg text{font-family:var(--sans)}
 .colorby a.on{color:var(--ink);border-bottom:2px solid var(--blue)}
 .tabs{align-items:baseline}
 .back{display:none;font-size:.85rem;padding:.3rem 1.2rem}
+@media (max-width:700px){
+  #ths th:nth-child(4),#ths td:nth-child(4),#ths th:nth-child(5),#ths td:nth-child(5){display:none}
+}
 @media (max-width:900px){
   main{grid-template-columns:1fr;height:auto}
   section{border:0;display:none;min-height:60vh}
@@ -125,7 +128,7 @@ const USER=/\[\[(?:משתמש|משתמשת|שיחת משתמש|שיחת משתמ
 let D, cur=null, curTh=null, sortK="comments", sortDir=-1, colorMode="emo";
 const EMO={agg:{c:"#B3402A",he:"תוקפנות"},con:{c:"#3E7C4F",he:"פיוס"},fru:{c:"#C08A1F",he:"תשישות"},neu:{c:"#98A5AB",he:"ניטרלי"}};
 const main=$("main");
-fetch("site/corpus.json?v=1788321076").then(r=>r.json()).then(d=>{D=d;
+fetch("site/corpus.json?v=1788321210").then(r=>r.json()).then(d=>{D=d;
   const A=d.articles, T=A.reduce((s,a)=>s+a.threads.length,0), C=A.reduce((s,a)=>s+a.threads.reduce((x,t)=>x+t.comments,0),0);
   $("#meta").textContent=`${A.length} ערכים · ${T} דיונים · ${C} תגובות חתומות · נבנה ${d.built}`;
   renderArts();});
