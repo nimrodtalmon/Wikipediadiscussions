@@ -112,6 +112,7 @@ svg text{font-family:var(--sans)}
       <input type="search" id="q" placeholder="חיפוש בכותרות">
       <label>לפחות <span id="minV">1</span> תגובות <input type="range" id="min" min="0" max="20" value="1"></label>
     </div>
+    <div id="strip" style="padding:0 1.2rem .5rem"></div>
     <table><thead><tr>
       <th data-k="title">דיון</th><th data-k="comments" class="desc">תגובות</th><th data-k="editors">עורכים</th><th data-k="chars">תווים</th><th data-k="first">התחלה</th><th data-k="post">יציבות אחרי</th>
     </tr></thead><tbody id="thBody"></tbody></table>
@@ -128,7 +129,7 @@ const USER=/\[\[(?:משתמש|משתמשת|שיחת משתמש|שיחת משתמ
 let D, cur=null, curTh=null, sortK="comments", sortDir=-1, colorMode="emo";
 const EMO={agg:{c:"#B3402A",he:"תוקפנות"},con:{c:"#3E7C4F",he:"פיוס"},fru:{c:"#C08A1F",he:"תשישות"},neu:{c:"#98A5AB",he:"ניטרלי"}};
 const main=$("main");
-fetch("site/corpus.json?v=1788321210").then(r=>r.json()).then(d=>{D=d;
+fetch("site/corpus.json?v=1788321389").then(r=>r.json()).then(d=>{D=d;
   const A=d.articles, T=A.reduce((s,a)=>s+a.threads.length,0), C=A.reduce((s,a)=>s+a.threads.reduce((x,t)=>x+t.comments,0),0);
   $("#meta").textContent=`${A.length} ערכים · ${T} דיונים · ${C} תגובות חתומות · נבנה ${d.built}`;
   renderArts();});
@@ -152,6 +153,7 @@ function renderThs(){
   const a=D.articles.find(x=>x.title===cur); if(!a)return;
   const st=a.stab;
   $("#thsTitle").innerHTML=`${esc(a.title)} — ${a.threads.length} דיונים · ${a.talk_revs} עריכות שיחה · ${a.article_revs} עריכות בערך<br><span style="font-weight:400">יציבות: ${st.identity_reverts} שחזורים (${(st.revert_rate*100).toFixed(1)}%) · ${st.war_episodes} מלחמות עריכה · הגרסה הנוכחית בת ${st.current_version_days} ימים</span>`;
+  renderStrip(a);
   const q=$("#q").value.trim(), mn=+$("#min").value;
   let rows=a.threads.map((t,i)=>({...t,i,post:t.link?t.link.post_days:-1})).filter(t=>t.comments>=mn&&(!q||t.title.includes(q)));
   rows.sort((x,y)=>{const u=x[sortK],v=y[sortK];return (typeof u==="number"?u-v:String(u).localeCompare(String(v),"he"))*sortDir;});
@@ -199,6 +201,35 @@ function editorColors(cmts){
   const eds=[...new Set(cmts.filter(c=>c.user).map(c=>c.user))];
   const col={}; eds.forEach((e,i)=>col[e]=`hsl(${Math.round(i*137.5)%360} 42% 46%)`);
   return {eds,col};
+}
+function renderStrip(a){
+  const tl=a.tl; if(!tl){$("#strip").innerHTML="";return;}
+  const W=Math.max(300,Math.min(($("#ths").clientWidth||window.innerWidth)-40,640));
+  const bandH=26, laneH=7, pad=12;
+  const m0=new Date(tl.m0+"-01").getTime(), m1=Date.now();
+  const X=d=>pad+(new Date(d).getTime()-m0)/(m1-m0)*(W-2*pad);
+  const mx=Math.max(...tl.edits,1);
+  const bw=(W-2*pad)/tl.edits.length;
+  let bars=tl.edits.map((e,i)=>e?`<rect x="${pad+i*bw}" y="${bandH-(4+18*e/mx)}" width="${Math.max(bw-0.4,0.8)}" height="${4+18*e/mx}" fill="#C6D3D9"/>`:"").join("");
+  let revs=tl.rev.map(d=>`<line x1="${X(d)}" x2="${X(d)}" y1="0" y2="${bandH}" stroke="#B3402A" stroke-width="1" opacity="0.65"/>`).join("");
+  // thread lanes (dated threads only), greedy stacking, colored by dominant non-neutral emotion
+  const ths=a.threads.map((t,i)=>({t,i})).filter(x=>x.t.first).sort((x,y)=>x.t.first<y.t.first?-1:1);
+  const lanes=[];
+  const items=ths.map(x=>{const s=X(x.t.first),e=Math.max(X(x.t.last||x.t.first),s+3);
+    let L=lanes.findIndex(v=>v<s-2); if(L<0){L=lanes.length;lanes.push(0);} lanes[L]=e;
+    const n={agg:0,con:0,fru:0}; x.t.cmts.forEach(c=>{if(c.emo.label!=="neu")n[c.emo.label]++});
+    const dom=Object.keys(n).sort((p,q)=>n[q]-n[p])[0];
+    const col=n[dom]>0?EMO[dom].c:"#8FA0A8";
+    return {...x,s,e,L,col};});
+  const H=bandH+8+lanes.length*laneH+14;
+  let marks=items.map(x=>`<line class="tmark" data-i="${x.i}" x1="${x.s}" x2="${x.e}" y1="${bandH+8+x.L*laneH}" y2="${bandH+8+x.L*laneH}" stroke="${x.col}" stroke-width="4.5" stroke-linecap="round"><title>${esc(x.t.title)} (${x.t.comments})</title></line>`).join("");
+  // year labels
+  let years="";
+  for(let y=new Date(m0).getFullYear()+1;y<=new Date(m1).getFullYear();y+=(W<400?4:2))
+    years+=`<text x="${X(y+"-01-01")}" y="${H-2}" font-size="8.5" fill="#9AA5AB" text-anchor="middle">${y}</text>`;
+  $("#strip").innerHTML=`<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" style="direction:ltr">${bars}${revs}${marks}${years}</svg>
+  <div style="font-size:.72rem;color:var(--mute)">אפור: קצב עריכות · אדום: שחזורים · פסים: דיונים על ציר הזמן (צבע = הרגש הבולט; הקשה פותחת)</div>`;
+  document.querySelectorAll(".tmark").forEach(m=>m.onclick=()=>showThread(+m.dataset.i));
 }
 function renderTree(t){
   const C=t.cmts; if(!C.length){$("#view").innerHTML=`<div class="empty">אין תגובות מזוהות בדיון הזה.</div>`;return;}

@@ -4,6 +4,7 @@ from parse_threads import threads as split_threads, SIG, USER
 from emotion import score as emo_score
 from stability import analyze as stab
 from link_threads import identity_flags, link
+from collections import Counter
 ROOT=pathlib.Path(__file__).resolve().parent.parent
 MONTHS={m:i+1 for i,m in enumerate("ינואר פברואר מרץ אפריל מאי יוני יולי אוגוסט ספטמבר אוקטובר נובמבר דצמבר".split())}
 def iso(d):
@@ -46,9 +47,17 @@ for f in sorted((ROOT/"data").glob("*.json")):
             ths.append({**meta,"first":iso(meta["first"]),"last":iso(meta["last"]),"page":tp["title"],"text":body.strip(),"cmts":comments(body.strip())})
     rs,flags=identity_flags(rec["article_revs"])
     for t in ths: t["link"]=link(rs,flags,t)
+    months=Counter(r["timestamp"][:7] for r in rs)
+    m0=rs[0]["timestamp"][:7]; mN=__import__("time").strftime("%Y-%m")
+    def _mrange(a,b):
+        y,m=int(a[:4]),int(a[5:7]); out=[]
+        while f"{y:04d}-{m:02d}"<=b: out.append(f"{y:04d}-{m:02d}"); m+=1; y,m=(y+1,1) if m>12 else (y,m)
+        return out
+    mm=_mrange(m0,mN)
+    tl={"m0":m0,"edits":[months.get(m,0) for m in mm],"rev":[r["timestamp"][:10] for r,f in zip(rs,flags) if f]}
     arts.append({"title":rec["article"],"ring":seeds.get(rec["article"],"adjacent" if rec["article"] in seeds else "core"),
                  "talk_revs":sum(len(t["revs"] or []) for t in rec["talk_pages"]),"article_revs":len(rec["article_revs"]),
-                 "archives":len(rec["talk_pages"])-1,"threads":ths,"stab":stab(rec["article_revs"])})
+                 "archives":len(rec["talk_pages"])-1,"threads":ths,"stab":stab(rec["article_revs"]),"tl":tl})
 out={"built":__import__("time").strftime("%Y-%m-%d %H:%M"),"articles":arts}
 (ROOT/"site/corpus.json").write_text(json.dumps(out,ensure_ascii=False))
 import re as _re, time as _time
