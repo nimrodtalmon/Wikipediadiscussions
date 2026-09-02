@@ -37,16 +37,19 @@ def comments(body):
 def thread_bodies(text):
     parts=re.split(r"^==+\s*(.+?)\s*==+\s*$",text,flags=re.M)
     return [parts[i+1] for i in range(1,len(parts),2)]
+Q=json.loads((ROOT/"data/quality.json").read_text()) if (ROOT/"data/quality.json").exists() else {}
 seeds={l.strip():ring for ring in ("core","adjacent") for l in (ROOT/"data"/f"seed_{ring}.txt").read_text(encoding="utf8").splitlines() if l.strip()}
 arts=[]
 for f in sorted((ROOT/"data").glob("*.json")):
-    if not f.name.endswith(".json") or f.name.startswith("scope_") or f.name in ("corpus.json","threads.csv"): continue
+    if not f.name.endswith(".json") or f.name.startswith("scope_") or f.name in ("corpus.json","threads.csv","quality.json"): continue
     rec=json.loads(f.read_text()); ths=[]
     for tp in rec["talk_pages"]:
         for meta,body in zip(split_threads(tp["text"]),thread_bodies(tp["text"])):
             ths.append({**meta,"first":iso(meta["first"]),"last":iso(meta["last"]),"page":tp["title"],"text":body.strip(),"cmts":comments(body.strip())})
     rs,flags=identity_flags(rec["article_revs"])
-    for t in ths: t["link"]=link(rs,flags,t)
+    for t in ths:
+        t["link"]=link(rs,flags,t)
+        t["q"]=Q.get(f"{rec['article']}::{t['page']}::{t['title']}")
     months=Counter(r["timestamp"][:7] for r in rs)
     m0=rs[0]["timestamp"][:7]; mN=__import__("time").strftime("%Y-%m")
     def _mrange(a,b):

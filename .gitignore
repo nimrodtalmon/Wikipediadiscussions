@@ -1,2 +1,3 @@
 data/*.json
+!data/quality.json
 __pycache__/

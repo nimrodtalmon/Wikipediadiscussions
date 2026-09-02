@@ -129,7 +129,7 @@ const USER=/\[\[(?:משתמש|משתמשת|שיחת משתמש|שיחת משתמ
 let D, cur=null, curTh=null, sortK="comments", sortDir=-1, colorMode="emo";
 const EMO={agg:{c:"#B3402A",he:"תוקפנות"},con:{c:"#3E7C4F",he:"פיוס"},fru:{c:"#C08A1F",he:"תשישות"},neu:{c:"#98A5AB",he:"ניטרלי"}};
 const main=$("main");
-fetch("site/corpus.json?v=1788322055").then(r=>r.json()).then(d=>{D=d;
+fetch("site/corpus.json?v=1788322653").then(r=>r.json()).then(d=>{D=d;
   const A=d.articles, T=A.reduce((s,a)=>s+a.threads.length,0), C=A.reduce((s,a)=>s+a.threads.reduce((x,t)=>x+t.comments,0),0);
   $("#meta").textContent=`${A.length} ערכים · ${T} דיונים · ${C} תגובות חתומות · נבנה ${d.built}`;
   renderArts();});
@@ -178,7 +178,7 @@ function wiki(s){
 function showThread(i){
   curTh=i; const a=D.articles.find(x=>x.title===cur), t=a.threads[i]; renderThs();
   const url=`https://he.wikipedia.org/wiki/${encodeURIComponent(t.page)}#${encodeURIComponent(t.title.replace(/ /g,"_"))}`;
-  $("#reader").innerHTML=`<h3>${esc(t.title)}</h3><div class="sub">${esc(a.title)} · ${t.comments} תגובות חתומות · ${t.editors} עורכים${t.first?` · ${t.first} עד ${t.last}`:""}${t.link?` · בחלון הדיון: ${t.link.win_edits} עריכות, ${t.link.win_reverts} שחזורים · שחזור הבא ${t.link.post_days} ימים אחרי${t.link.censored?" (טרם)":""}`:""}<a href="${url}" target="_blank" rel="noopener">לדף המקור</a></div>
+  $("#reader").innerHTML=`<h3>${esc(t.title)}</h3><div class="sub">${esc(a.title)} · ${t.comments} תגובות חתומות · ${t.editors} עורכים${t.first?` · ${t.first} עד ${t.last}`:""}${t.q?` · איכות הגרסה (LLM, ניסיוני): דיוק ${t.q.accuracy}/7 · ביסוס ${t.q.sourcing}/7 · איזון ${t.q.neutrality}/7`:""}${t.link?` · בחלון הדיון: ${t.link.win_edits} עריכות, ${t.link.win_reverts} שחזורים · שחזור הבא ${t.link.post_days} ימים אחרי${t.link.censored?" (טרם)":""}`:""}<a href="${url}" target="_blank" rel="noopener">לדף המקור</a></div>
   <div id="outcome"></div>
   <div class="tabs"><a href="#" id="tabTree" class="on">מבנה הדיון</a><a href="#" id="tabRaw">השיחה</a><span class="colorby">צבע לפי <a href="#" id="cbE">רגש</a><a href="#" id="cbU">עורך</a></span></div><div id="view"></div>`;
   $("#cbE").onclick=e=>{e.preventDefault();colorMode="emo";setTab(curTab,t)};
