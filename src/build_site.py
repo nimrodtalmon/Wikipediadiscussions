@@ -1,7 +1,8 @@
 """Build docs/data/corpus.json for the GitHub Pages explorer from data/*.json."""
 import json, re, pathlib
 from parse_threads import threads as split_threads, SIG, USER
-from emotion import score as emo_score
+from emotion import score_lexicon as emo_score, load_llm
+LLM=load_llm()
 from stability import analyze as stab
 from link_threads import identity_flags, link
 from dynamics import dynamics
@@ -54,6 +55,8 @@ for f in sorted((ROOT/"data").glob("*.json")):
         t["link"]=link(rs,flags,t)
         _qv=Q.get(f"{rec['article']}::{ti}::{t['title']}"); t["q"]=_qv if _qv and "accuracy" in _qv else None
         t["dyn"]=dynamics(t["cmts"])
+        for ci,c in enumerate(t["cmts"]):
+            c["emo_llm"]=LLM.get(f"{rec['article']}::{ti}::{ci}")
         _pk=f"{rec['article']}::{ti}::{t['title']}"
         _pq=PQ.get(_pk); _pr=PAIRS.get(_pk)
         _d={}

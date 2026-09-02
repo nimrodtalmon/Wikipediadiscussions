@@ -152,7 +152,7 @@ const USER=/\[\[(?:משתמש|משתמשת|שיחת משתמש|שיחת משתמ
 let D, cur=null, curTh=null, sortK="comments", sortDir=-1, colorMode="emo";
 const EMO={agg:{c:"#B3402A",he:"תוקפנות"},con:{c:"#3E7C4F",he:"פיוס"},fru:{c:"#C08A1F",he:"תשישות"},neu:{c:"#98A5AB",he:"ניטרלי"}};
 const main=$("main");
-fetch("site/corpus.json?v=1788339327").then(r=>r.json()).then(d=>{D=d;
+fetch("site/corpus.json?v=1788340506").then(r=>r.json()).then(d=>{D=d;
   const A=d.articles, T=A.reduce((s,a)=>s+a.threads.length,0), C=A.reduce((s,a)=>s+a.threads.reduce((x,t)=>x+t.comments,0),0);
   $("#meta").textContent=`${A.length} ערכים · ${T} דיונים · ${C} תגובות חתומות · נבנה ${d.built}`;
   renderArts();});

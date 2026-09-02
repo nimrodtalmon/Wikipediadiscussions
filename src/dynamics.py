@@ -12,7 +12,7 @@ Measures:
   top_share       : share of comments by the most active editor (concentration)
   ends_con        : thread's last 3 comments contain conciliation and no aggression (convergence proxy)
 """
-VAL={"agg":-1.0,"fru":-0.5,"con":1.0,"neu":0.0}
+from emotion import VALENCE as VAL
 
 def _pearson(x,y):
     n=len(x)
@@ -22,10 +22,11 @@ def _pearson(x,y):
     if sx==0 or sy==0: return None
     return sum((a-mx)*(b-my) for a,b in zip(x,y))/(sx*sy)
 
-def dynamics(cmts):
+def dynamics(cmts, impl="lex"):
+    """impl: which M4 implementation to read — 'lex' (c['emo']) or 'llm' (c['emo_llm'], falling back to lex)."""
     n=len(cmts)
     if n<3: return None
-    lab=[c["emo"]["label"] for c in cmts]
+    lab=[(c.get("emo_llm") or c["emo"])["label"] if impl=="llm" else c["emo"]["label"] for c in cmts]
     users=[c["user"] for c in cmts]
     val=[VAL[l] for l in lab]
     out={}
