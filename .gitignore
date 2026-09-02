@@ -1,3 +1,4 @@
 data/*.json
 !data/quality.json
 __pycache__/
+!data/validation_sample.csv
