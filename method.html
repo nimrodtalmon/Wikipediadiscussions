@@ -70,15 +70,15 @@ code{font-size:.85em;background:#E9EDEB;padding:0 .25rem;border-radius:2px}
 
 <div class="mod"><h3>3 · רגש בתגובה<span class="st v0">שני מימושים</span></h3>
 <p class="lbl">מה השלב אמור לעשות</p><p>לתת לכל תגובה תווית רגשית — תוקפנות, פיוס, תשישות או ניטרלי — ועוצמה.</p>
-<p class="lbl">מה עושים היום</p><p>יש שני מימושים, ואפשר להחליף ביניהם בסייר: <b>מילון</b> — סופרים בכל תגובה מילים וביטויים מרשימה קבועה; ו-<b>LLM</b> — מודל שפה קורא את התגובה ומתייג אותה. על הדיון היחיד שקודד בשתי הדרכים (128 תגובות) הן הסכימו רק ב-45%: המילון זיהה 29 תגובות תוקפניות, המודל 68 — המילון עיוור לציניות ולהאשמות מנומסות.</p>
-<div class="impl"><b>מימוש א — מילון.</b> הרשימה נמצאת ב-<a href="https://github.com/nimrodtalmon/Wikipediadiscussions/blob/main/data/lexicon.csv">data/lexicon.csv</a> (95 ביטויים בשלוש קטגוריות) וכל אחד יכול לערוך אותה. <b>מימוש ב — LLM.</b> קידוד ידני-מודלי, נבנה בישיבות; כרגע מכסה דיון אחד, ומתרחב.</div>
+<p class="lbl">מה עושים היום</p><p>יש שני מימושים, ואפשר להחליף ביניהם בסייר: <b>מילון</b> — סופרים בכל תגובה מילים וביטויים מרשימה קבועה; ו-<b>LLM</b> — מודל שפה קורא את התגובה ומתייג אותה. על 1,220 התגובות שקודדו בשתי הדרכים הן מסכימות ב-61%: המודל מזהה כשליש יותר תוקפנות (208 מול 159) — המילון עיוור לציניות, להתנשאות ולהאשמות מנומסות.</p>
+<div class="impl"><b>מימוש א — מילון.</b> הרשימה נמצאת ב-<a href="https://github.com/nimrodtalmon/Wikipediadiscussions/blob/main/data/lexicon.csv">data/lexicon.csv</a> (95 ביטויים בשלוש קטגוריות) וכל אחד יכול לערוך אותה. <b>מימוש ב — LLM.</b> קידוד ידני-מודלי, נבנה בישיבות; מכסה את כל 1,220 התגובות ב-71 הדיונים העשירים.</div>
 <details><summary>הגדרה טכנית (English)</summary><div class="tech">
 <div class="kv"><span>Input</span><span>one comment's text.</span><span>Output</span><span><code>{label ∈ {agg, con, fru, neu}, s ∈ [0,1]}</code>; identical schema for both implementations.</span></div>
 <ul>
 <li><b>A. Lexicon</b> (<code>data/lexicon.csv</code>, columns <code>category, phrase</code>): score<sub>k</sub> = number of phrase occurrences of category k; aggression additionally counts <code>!!</code> and double question marks. intensity<sub>k</sub> = score<sub>k</sub> per 1,000 characters. label = argmax<sub>k</sub> score if its intensity ≥ 0.8, else <code>neu</code>. s = min(1, intensity/3).</li>
 <li><b>B. LLM</b> (<code>data/emotion_llm.json</code>, key <code>article::thread_index::comment_index</code>): coded comment by comment in sittings; missing keys fall back to A in the explorer.</li>
 <li><b>Valence</b> (consumed by module 4): con +1, agg −1, fru −0.5, neu 0.</li>
-<li><b>Agreement so far</b> (281 comments, 3 threads): 53%; B labels ~2× more aggression than A.</li>
+<li><b>Agreement</b> (1,220 comments, 71 threads, complete): 61%; B labels ~30% more aggression than A; thread-level aggression is bimodal (40 threads ≤5%, 7 threads ≥30%).</li>
 </ul></div></details></div>
 
 <div class="mod"><h3>4 · דינמיקת הדיון<span class="st v0">v0</span></h3>
