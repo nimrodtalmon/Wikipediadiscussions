@@ -116,7 +116,7 @@ svg text{font-family:var(--sans)}
 <body>
 <header>
   <h1><a href="./" style="color:inherit;text-decoration:none">דפי שיחה על בריאות הנפש</a></h1>
-  <span class="meta" id="meta">טוען…</span><span class="meta">קידוד רגש: <a href="#" id="implLex" class="on">מילון</a> · <a href="#" id="implLlm">LLM</a></span><span class="meta"><a href="method.html">איך זה עובד?</a></span>
+  <span class="meta" id="meta">טוען…</span><span class="meta">קידוד רגש: <a href="#" id="implLlm" class="on">LLM</a> · <a href="#" id="implLex">מילון</a></span><span class="meta"><a href="method.html">איך זה עובד?</a></span>
 </header>
 <main data-view="articles" id="mainGrid">
   <section id="arts">
@@ -151,11 +151,11 @@ svg text{font-family:var(--sans)}
 const $=s=>document.querySelector(s), esc=s=>s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
 const SIG=/(\d{1,2}:\d{2}),?\s+(\d{1,2}\s+ב?[א-ת]+\s+\d{4})\s+\((?:IST|IDT|UTC)\)/g;
 const USER=/\[\[(?:משתמש|משתמשת|שיחת משתמש|שיחת משתמשת|User|User talk):([^|\]#/]+)[^\]]*\]\]/;
-let D, cur=null, curTh=null, sortK="comments", sortDir=-1, colorMode="emo", emoImpl="lex";
+let D, cur=null, curTh=null, sortK="comments", sortDir=-1, colorMode="emo", emoImpl="llm";
 const emoOf=c=>(emoImpl==="llm"&&c.emo_llm)?c.emo_llm:c.emo;
 const EMO={agg:{c:"#B3402A",he:"תוקפנות"},con:{c:"#3E7C4F",he:"פיוס"},fru:{c:"#C08A1F",he:"תשישות"},neu:{c:"#98A5AB",he:"ניטרלי"}};
 const main=$("main");
-fetch("site/corpus.json?v=1788344899").then(r=>r.json()).then(d=>{D=d;
+fetch("site/corpus.json?v=1788345099").then(r=>r.json()).then(d=>{D=d;
   const A=d.articles, T=A.reduce((s,a)=>s+a.threads.length,0), C=A.reduce((s,a)=>s+a.threads.reduce((x,t)=>x+t.comments,0),0);
   $("#meta").textContent=`${A.length} ערכים · ${T} דיונים · ${C} תגובות חתומות · נבנה ${d.built}`;
   renderArts();});

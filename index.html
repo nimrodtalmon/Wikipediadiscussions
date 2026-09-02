@@ -40,7 +40,9 @@ p{margin:.4rem 0}
 
 <h2>מצב הקורפוס</h2>
 <div class="stats" id="stats"><div><b>…</b><span>ערכים</span></div><div><b>…</b><span>דיונים</span></div><div><b>…</b><span>תגובות חתומות</span></div><div><b>…</b><span>דיונים עשירים (5+)</span></div></div>
-<p style="color:var(--mute);font-size:.9rem">מדגם ראשוני: ערכים קליניים מרכזיים ועוד כמה ערכים סמוכים סוערים. רשימת הערכים הסופית עדיין נבנית.</p>
+<p style="color:var(--mute);font-size:.9rem">מדגם ראשוני של 18 ערכים: קליניים מרכזיים ועוד כמה סמוכים סוערים. הרשימה הסופית תיקבע בצוות.</p>
+<h2>מצב הפרויקט</h2>
+<p>הצינור המלא קיים בגרסה ראשונית (v0) מקצה לקצה: שמונה שלבים, לרגש שני מימושים (מילון ומודל שפה — 1,220 תגובות קודדו), לאיכות מדגם של 70 גרסאות ו-48 זוגות סביב שחזורים, וניתוח ראשון שרץ בשני מימושי הרגש. מכאן: שכתוב שלב-אחר-שלב לרמה מדעית, בסדר עדיפויות שמופיע בדוח.</p>
 
 <h2>כלים</h2>
 <div class="links">
@@ -54,7 +56,7 @@ p{margin:.4rem 0}
 <p class="foot" id="built"></p>
 </div>
 <script>
-fetch("site/corpus.json?v=1788344899").then(r=>r.json()).then(d=>{const A=d.articles,T=A.flatMap(a=>a.threads);
+fetch("site/corpus.json?v=1788345099").then(r=>r.json()).then(d=>{const A=d.articles,T=A.flatMap(a=>a.threads);
 const v=[A.length,T.length,T.reduce((s,t)=>s+t.comments,0),T.filter(t=>t.comments>=5).length];
 document.querySelectorAll("#stats b").forEach((b,i)=>b.textContent=v[i]);
 document.getElementById("built").textContent="נתונים נמשכו מוויקיפדיה העברית ב-"+d.built+".";});

@@ -1,19 +1,30 @@
-# Wikipedia discussions — emotional dynamics in he.wiki mental-health talk pages
+# Wikipedia discussions — emotional dynamics in Hebrew-Wikipedia mental-health talk pages
 
-Funded by Wikimedia Israel (Dror Lin fund). PIs: Anat Talmon, Nimrod Talmon.
+Funded by Wikimedia Israel (Dror Lin fund). PIs: Anat Talmon (HUJI), Nimrod Talmon (BGU).
+Question: do emotions in talk-page discussions predict discussion structure and, through it,
+article quality — stability (versions survive) and correctness (versions are right)?
 
-Question: do emotional expressions in talk-page discussions predict discussion structure (dropout vs. convergence) and, through it, article quality (stability of consensus versions; expert-rated correctness)?
+Site: https://nimrodtalmon.github.io/Wikipediadiscussions/ (homepage → `method.html` → `explorer.html`)
+Report: Overleaf project 6a97251075788b2977dd80db (compiled copy in `site/report.pdf`).
 
-## Layout
-- `src/fetch_talk.py <seedfile>` — fetch talk page + archive subpages and revision metadata (talk + article) into `data/<article>.json`
-- `src/parse_threads.py` — split talk pages into threads, count signed comments/editors → `data/threads.csv`
-- `data/seed_core.txt`, `data/seed_adjacent.txt` — curated article lists (in progress)
+## Pipeline (each module a pure function of the previous)
+| # | Module | Code | Status |
+|---|--------|------|--------|
+| 1 | Corpus + fetch | `src/scope_candidates.py` (ranking, internal), `src/fetch_talk.py` | seed of 18 articles |
+| 2 | Segmentation (threads, comments, reply tree) | `src/parse_threads.py`, `build_site.comments()` | v1 |
+| 3 | Comment emotion — A lexicon (`data/lexicon.csv`), B LLM (`data/emotion_llm.json`) | `src/emotion.py`, `src/emotion_sheet.py` | complete (1,220 comments) |
+| 4 | Discussion dynamics | `src/dynamics.py` | v0 |
+| 5 | Article stability | `src/stability.py` | v0 |
+| 6 | Version quality — LLM rater; samples A (`data/quality.json`) and B pairs (`src/pair_quality.py`, `data/pair_quality.json`) | `src/llm_quality.py` | v0 |
+| 7 | Linking threads ↔ edits | `src/link_threads.py` | v1 (score) |
+| 8 | Analysis | `src/analysis.py {lex|llm}` → `data/analysis_*.json` | smoke test |
 
-Raw fetched JSON is git-ignored; regenerate with the fetcher.
-Report lives on Overleaf (project 6a97251075788b2977dd80db).
+`src/build_site.py` runs 2–7 over fetched data and writes `site/corpus.json` for the site.
 
-## Site (GitHub Pages, branch `main`, root)
-- `index.html` — project homepage (question, status, links)
-- `explorer.html` — corpus explorer: articles → threads → thread reader
-- `site/corpus.json` — data for both, rebuilt with `python3 src/build_site.py`
-- `site/report.pdf` — compiled from the Overleaf project (`pdflatex main.tex`, copy in); refresh when the report changes
+## Workflow
+```
+python3 src/fetch_talk.py data/seed_core.txt      # fetch (raw JSON is git-ignored)
+python3 src/build_site.py                         # rebuild site data (+cache-busting)
+python3 src/analysis.py llm                       # analysis on the LLM implementation
+```
+Raw article data is never committed; coded/rated files under `data/` are.
