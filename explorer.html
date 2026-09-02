@@ -30,6 +30,14 @@ main{display:grid;grid-template-columns:19rem 6px 27rem 6px 1fr;height:calc(100%
 #lbClose:hover{color:var(--ink)}
 #lbBody svg{width:100%;height:auto}
 svg.zoomable{cursor:zoom-in}
+.vizctl{display:flex;align-items:center;gap:.6rem;margin:.2rem 0 .1rem}
+.vizctl button{border:1px solid var(--line);background:var(--panel);color:var(--blue);border-radius:4px;font-size:.9rem;padding:.15rem .6rem;cursor:pointer}
+.vizctl input[type=range]{flex:1;accent-color:var(--blue)}
+.vizctl .tlab{font-size:.78rem;color:var(--mute);min-width:5.4rem;font-variant-numeric:tabular-nums}
+details.help{margin:.3rem 0 .6rem;font-size:.82rem;color:var(--mute);line-height:1.55}
+details.help summary{cursor:pointer;color:var(--blue);font-size:.8rem;list-style:none}
+details.help summary::before{content:"ⓘ "}
+details.help b{color:var(--ink);font-weight:500}
 section{overflow:auto;border-inline-start:1px solid var(--line);padding:.6rem 0}
 section:first-child{border:0}
 h2{font-family:var(--serif);font-weight:500;font-size:1rem;margin:.3rem 1.2rem .6rem;color:var(--mute)}
@@ -106,7 +114,7 @@ svg text{font-family:var(--sans)}
 <body>
 <header>
   <h1><a href="./" style="color:inherit;text-decoration:none">דפי שיחה על בריאות הנפש</a></h1>
-  <span class="meta" id="meta">טוען…</span>
+  <span class="meta" id="meta">טוען…</span><span class="meta"><a href="method.html">איך זה עובד?</a></span>
 </header>
 <main data-view="articles" id="mainGrid">
   <section id="arts">
@@ -144,7 +152,7 @@ const USER=/\[\[(?:משתמש|משתמשת|שיחת משתמש|שיחת משתמ
 let D, cur=null, curTh=null, sortK="comments", sortDir=-1, colorMode="emo";
 const EMO={agg:{c:"#B3402A",he:"תוקפנות"},con:{c:"#3E7C4F",he:"פיוס"},fru:{c:"#C08A1F",he:"תשישות"},neu:{c:"#98A5AB",he:"ניטרלי"}};
 const main=$("main");
-fetch("site/corpus.json?v=1788326096").then(r=>r.json()).then(d=>{D=d;
+fetch("site/corpus.json?v=1788326674").then(r=>r.json()).then(d=>{D=d;
   const A=d.articles, T=A.reduce((s,a)=>s+a.threads.length,0), C=A.reduce((s,a)=>s+a.threads.reduce((x,t)=>x+t.comments,0),0);
   $("#meta").textContent=`${A.length} ערכים · ${T} דיונים · ${C} תגובות חתומות · נבנה ${d.built}`;
   renderArts();});
@@ -195,6 +203,7 @@ function showThread(i){
   const url=`https://he.wikipedia.org/wiki/${encodeURIComponent(t.page)}#${encodeURIComponent(t.title.replace(/ /g,"_"))}`;
   $("#reader").innerHTML=`<h3>${esc(t.title)}</h3><div class="sub">${esc(a.title)} · ${t.comments} תגובות חתומות · ${t.editors} עורכים${t.first?` · ${t.first} עד ${t.last}`:""}${t.q?` · איכות הגרסה (LLM, ניסיוני): דיוק ${t.q.accuracy}/7 · ביסוס ${t.q.sourcing}/7 · איזון ${t.q.neutrality}/7`:""}${t.link?` · בחלון הדיון: ${t.link.win_edits} עריכות, ${t.link.win_reverts} שחזורים · שחזור הבא ${t.link.post_days} ימים אחרי${t.link.censored?" (טרם)":""} · עוצמת הקישור דיון↔עריכות: <b>${{"high":"גבוהה","medium":"בינונית","low":"נמוכה"}[t.link.conf]}</b> (${t.link.score}/11)`:""}<a href="${url}" target="_blank" rel="noopener">לדף המקור</a></div>
   <div id="outcome"></div>
+  <div class="vizctl" id="rdCtl" style="display:none"><button id="playR" title="הרצת הדיון">▶</button><input type="range" id="sliderR" min="0" max="1000" value="1000"><span class="tlab" id="tlabR"></span></div>
   <div class="tabs"><a href="#" id="tabTree" class="on">מבנה הדיון</a><a href="#" id="tabRaw">השיחה</a><span class="colorby">צבע לפי <a href="#" id="cbE">רגש</a><a href="#" id="cbU">עורך</a></span></div><div id="view"></div>`;
   $("#cbE").onclick=e=>{e.preventDefault();colorMode="emo";setTab(curTab,t)};
   $("#cbU").onclick=e=>{e.preventDefault();colorMode="ed";setTab(curTab,t)};
@@ -205,7 +214,21 @@ function showThread(i){
   if(!t.cmts){$("#view")&&0;t.cmts=[];}
   setTab(t.cmts.length>1?"tree":"raw",t);
 }
-let curTab="tree";
+let curTab="tree", RD=null, playR=null;
+function setTR(v){
+  if(!RD)return; v=+v;
+  const ts=RD.w0+(RD.end-RD.w0)*v/1000;
+  if(RD.cur){const x=RD.X(ts); const off=v>=1000;
+    RD.cur.setAttribute("x1",off?-9:x); RD.cur.setAttribute("x2",off?-9:x);}
+  $("#tlabR").textContent=v>=1000?"סוף הדיון":new Date(ts).toISOString().slice(0,10);
+  // dim future comments in the tree (if rendered)
+  const C=RD.t.cmts; let lastTs=RD.w0;
+  const eff=C.map(c=>{if(c.date)lastTs=new Date(c.date).getTime();return lastTs;});
+  document.querySelectorAll("#view g.node").forEach(n=>{
+    const i=+n.dataset.i; n.style.opacity=eff[i]<=ts?"1":"0.10";});
+  document.querySelectorAll("#view path[data-e]").forEach(e2=>{
+    const i=+e2.dataset.e; e2.style.opacity=eff[i]<=ts?"1":"0.08";});
+}
 function setTab(which,t){ curTab=which;
   $("#cbE").className=colorMode==="emo"?"on":""; $("#cbU").className=colorMode==="ed"?"on":"";
   $("#tabTree").className=which==="tree"?"on":""; $("#tabRaw").className=which==="raw"?"on":"";
@@ -240,7 +263,22 @@ function renderOutcome(a,t){
   // endpoint labels
   g+=`<text x="${W-pad}" y="${H-6}" font-size="11" fill="#6B7A83" text-anchor="end">תחילת הדיון · ${t.first}</text>`;
   g+=`<text x="${pad}" y="${H-6}" font-size="11" fill="${nxt?"#B3402A":"#3E7C4F"}" text-anchor="start">${nxt?"שחזור, כעבור "+t.link.post_days+" ימים":"היום — עדיין ללא שחזור ("+t.link.post_days+" ימים)"}</text>`;
-  $("#outcome").innerHTML=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;direction:ltr">${g}</svg>`;
+  g+=`<line id="curR" x1="-9" x2="-9" y1="6" y2="${H-16}" stroke="#16232B" stroke-width="1.2" stroke-dasharray="2 3"/>`;
+  $("#outcome").innerHTML=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;direction:ltr">${g}</svg>
+  <details class="help"><summary>מה רואים כאן?</summary>
+  ציר הזמן של דיון אחד, מימין (פתיחתו) לשמאל. <b>המלבן הכחול</b> — חלון הדיון (מהתגובה הראשונה ועד שבוע אחרי האחרונה). <b>נקודות</b> — התגובות עצמן, בצבע הרגש שזוהה בהן. <b>קווים אדומים</b> — שחזורים בערך בזמן הדיון. <b>הפס הירוק</b> — התקופה השקטה שאחריו, עד השחזור הבא (או עד היום). "עוצמת הקישור" שלמעלה אומדת עד כמה סביר שהעריכות בחלון שייכות לאותה מחלוקת (קישורי diff, חפיפת עורכים, שחזור שקדם לדיון ועוד) — קרבה בזמן לבדה אינה קשר סיבתי. הסליידר למטה מריץ את הדיון: הנקודות בעץ מופיעות לפי סדר הזמן.
+  </details>`;
+  RD={t,w0,end:w1,X,cur:$("#outcome").querySelector("#curR")};
+  const sl=document.querySelector("#sliderR"), pb=document.querySelector("#playR");
+  if(playR){clearInterval(playR);playR=null;}
+  sl.oninput=e=>setTR(e.target.value);
+  pb.textContent="▶";
+  pb.onclick=()=>{
+    if(playR){clearInterval(playR);playR=null;pb.textContent="▶";return;}
+    let v=0; pb.textContent="⏸";
+    playR=setInterval(()=>{sl.value=v;setTR(v);v+=6;
+      if(v>1000){sl.value=1000;setTR(1000);clearInterval(playR);playR=null;pb.textContent="▶";}},60);};
+  $("#rdCtl").style.display="flex"; sl.value=1000; setTR(1000);
   zoomable($("#outcome"),t.title+" — הדיון והתוצאה");
 }
 function renderRaw(t){
@@ -279,8 +317,11 @@ function renderStrip(a){
     sent+=`<rect x="${(Xi(i)-plotW/nM/2).toFixed(1)}" y="${Math.min(z,ys(v)).toFixed(1)}" width="${(plotW/nM).toFixed(2)}" height="${Math.abs(z-ys(v)).toFixed(1)}" fill="${v>0?"#3E7C4F":"#B3402A"}" opacity="0.75" shape-rendering="crispEdges"/>`;});
   // quality diamonds on top panel
   let qmarks="";
-  a.threads.forEach((t,i)=>{if(!t.q)return;const x=X(t.q.rev_ts.slice(0,10)),m=mIdx(t.q.rev_ts.slice(0,10)),y=y1(cum[m])-10;
-    qmarks+=`<g class="tmark" data-i="${i}" style="cursor:pointer"><path d="M ${x} ${y-6} l 5 6 l -5 6 l -5 -6 z" fill="#C08A1F" stroke="#fff" stroke-width="1"><title>איכות (LLM): דיוק ${t.q.accuracy}/7 — ${esc(t.title)}</title></path><text x="${x}" y="${y-9}" font-size="8.5" fill="#9C7A1E" text-anchor="middle">${t.q.accuracy}</text></g>`;});
+  const qxs={};
+  a.threads.forEach((t,i)=>{if(!t.q)return;const x0=X(t.q.rev_ts.slice(0,10)),m=mIdx(t.q.rev_ts.slice(0,10));
+    const bump=(qxs[Math.round(x0/10)]=(qxs[Math.round(x0/10)]||0)+1)-1;
+    const x=x0, y=Math.max(20,Math.min(H1-12,y1(cum[m])-10))-bump*13;
+    qmarks+=`<g class="tmark" data-i="${i}" data-ts="${t.q.rev_ts.slice(0,10)}" style="cursor:pointer"><path d="M ${x} ${y-6} l 5 6 l -5 6 l -5 -6 z" fill="#C08A1F" stroke="#fff" stroke-width="1"><title>איכות (LLM): דיוק ${t.q.accuracy}/7 — ${esc(t.title)}</title></path><text x="${x}" y="${y-9}" font-size="8.5" fill="#9C7A1E" text-anchor="middle">${t.q.accuracy}</text></g>`;});
   // discussion lanes
   const yL=H1+10+H2+12;
   const ths=a.threads.map((t,i)=>({t,i})).filter(x=>x.t.first).sort((x,y)=>x.t.first<y.t.first?-1:1);
@@ -292,20 +333,41 @@ function renderStrip(a){
     return {...x,s:ss,e,L,col:n[dom]>0?EMO[dom].c:"#8FA0A8"};});
   let marks=items.map(x=>`<line class="tmark" data-i="${x.i}" x1="${x.s.toFixed(1)}" x2="${x.e.toFixed(1)}" y1="${yL+x.L*laneH}" y2="${yL+x.L*laneH}" stroke="${x.col}" stroke-width="6" stroke-linecap="round" style="cursor:pointer"><title>${esc(x.t.title)} — ${x.t.comments} תגובות</title></line>`).join("");
   const H=yL+lanes.length*laneH+34;
-  let g=`<path d="${line}" fill="none" stroke="#2B6F8A" stroke-width="1.8"/>`+qmarks;
+  let g=`<path d="${line}" fill="none" stroke="#2B6F8A" stroke-width="1.8"/>`;
   g+=`<line x1="${X(m1)}" x2="${X(m0)}" y1="${z}" y2="${z}" stroke="#C8D0CD"/>`+sent+marks;
   g+=`<line x1="${X(m0)}" x2="${X(m1)+8}" y1="${H-14}" y2="${H-14}" stroke="#8B99A0" stroke-width="1.3"/>`;
   g+=`<path d="M ${X(m1)+9} ${H-18.5} L ${X(m1)} ${H-14} L ${X(m1)+9} ${H-9.5}" fill="none" stroke="#8B99A0" stroke-width="1.3"/>`;
   g+=`<text x="${X(m0)}" y="${H-2}" font-size="9.5" fill="#6B7A83" text-anchor="start">יצירת הערך</text>`;
   g+=`<text x="${X(m1)+2}" y="${H-2}" font-size="9.5" fill="#6B7A83" text-anchor="start">היום</text>`;
+  g+=qmarks;
   g+=`<text x="${W-2}" y="${8+10}" font-size="10" fill="#2B6F8A" text-anchor="end">בנייה נטו</text>`;
   g+=`<text x="${W-2}" y="${z+3}" font-size="10" fill="#6B7A83" text-anchor="end">מאזן רגשי</text>`;
   g+=`<text x="${W-2}" y="${yL+6}" font-size="10" fill="#6B7A83" text-anchor="end">דיונים</text>`;
   const yrStep=W<560?4:2;
   for(let y=new Date(m0).getFullYear()+1;y<=new Date(m1).getFullYear();y+=yrStep)
     g+=`<text x="${X(y+"-01-01").toFixed(1)}" y="${H-20}" font-size="9.5" fill="#9AA5AB" text-anchor="middle">${y}</text>`;
-  $("#strip").innerHTML=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;direction:ltr" preserveAspectRatio="xMidYMid meet">${g}</svg>
-  <div style="font-size:.78rem;color:var(--mute);line-height:1.5">מימין לשמאל: מראשית הערך עד היום. <span style="color:#2B6F8A">קו כחול — בנייה נטו: עולה עם כל עריכה, יורד עם כל שחזור</span>; מישורת או צניחה = מלחמת עריכה. <span style="color:#3E7C4F">ירוק מעל הקו</span>/<span style="color:#B3402A">אדום מתחתיו</span> — מאזן הרגש בדיונים באותו חודש (פיוס מול תוקפנות). <span style="color:#9C7A1E">◆ ציון דיוק (LLM) של גרסה שנבדקה</span>. כל פס תחתון = דיון אחד; לחיצה על פס או על ◆ פותחת את הדיון.</div>`;
+  const months=[...Array(nM).keys()].map(i=>{const t=new Date(m0);t.setMonth(t.getMonth()+i);return t.toISOString().slice(0,7);});
+  $("#strip").innerHTML=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;direction:ltr">${g}<rect id="dimA" x="0" y="0" width="0" height="${H-24}" fill="#EDF0EE" opacity="0.82"/><line id="curA" x1="-9" x2="-9" y1="0" y2="${H-18}" stroke="#16232B" stroke-width="1.2" stroke-dasharray="2 3"/></svg>
+  <div class="vizctl"><button id="playA" title="הרצה">▶</button><input type="range" id="sliderA" min="0" max="${nM-1}" value="${nM-1}"><span class="tlab" id="tlabA">היום</span></div>
+  <details class="help"><summary>מה רואים כאן?</summary>
+  שלוש שכבות על ציר זמן אחד, מימין (יצירת הערך) לשמאל (היום):<br>
+  <b>בנייה נטו</b> (קו כחול) — מונה מצטבר: כל עריכה בערך מוסיפה 1, כל שחזור (חזרה מדויקת לגרסה קודמת) מוריד 2, כי הוא מוחק עריכה וגם נספר בעצמו. עלייה = בנייה; מישורת/צניחה = מלחמת עריכה. <b>◆ כתום</b> — ציון דיוק (1–7) שנתן מודל שפה לגרסת הערך שאחרי דיון שנבדק.<br>
+  <b>מאזן רגשי</b> — לכל חודש, סכום על <i>כל</i> התגובות בדפי השיחה באותו חודש: פיוס +1, תוקפנות −1, תשישות −0.5 (סיווג מילוני ראשוני), בהחלקה של 3 חודשים. ירוק מעל הקו = חודש פייסני, אדום מתחתיו = חודש עוין.<br>
+  <b>דיונים</b> — אותן תגובות בדיוק, אבל מקובצות אחרת: כל פס = דיון אחד לאורך תקופת פעילותו, וצבעו = הרגש הלא-ניטרלי הנפוץ בו. כלומר: המאזן מסכם לפי חודש, הפסים מסכמים לפי דיון — שתי הצגות של אותם נתונים. לחיצה על פס פותחת את הדיון.<br>
+  הסליידר מזיז "עכשיו" לאורך ההיסטוריה; ▶ מריץ אותה כסרטון.
+  </details>`;
+  const dimA=$("#strip").querySelector("#dimA"), curA=$("#strip").querySelector("#curA");
+  const setTA=v=>{v=+v; const x=Xi(v); dimA.setAttribute("width",Math.max(0,x-pad)); dimA.setAttribute("x",pad);
+    curA.setAttribute("x1",x); curA.setAttribute("x2",x);
+    $("#tlabA").textContent=v>=nM-1?"היום":months[v];
+    if(v>=nM-1){dimA.setAttribute("width",0);curA.setAttribute("x1",-9);curA.setAttribute("x2",-9);}};
+  $("#sliderA").oninput=e=>setTA(e.target.value); setTA(nM-1);
+  let playTimer=null;
+  $("#playA").onclick=()=>{
+    if(playTimer){clearInterval(playTimer);playTimer=null;$("#playA").textContent="▶";return;}
+    let v=0; $("#playA").textContent="⏸";
+    playTimer=setInterval(()=>{ $("#sliderA").value=v; setTA(v); v++;
+      if(v>=nM){clearInterval(playTimer);playTimer=null;$("#playA").textContent="▶";}},70);};
   zoomable($("#strip"),cur+" — ציר זמן");
   document.querySelectorAll(".tmark").forEach(m=>m.onclick=e=>{e.stopPropagation();showThread(+m.dataset.i);});
 }
@@ -341,13 +403,17 @@ function renderTree(t){
   }
   $("#view").innerHTML=`<div class="legend">${legend}</div>
   <svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" style="direction:ltr">${marks}${edges}${nodes}</svg><div id="snip"></div>`;
+  $("#view").insertAdjacentHTML("beforeend",`<details class="help"><summary>מה רואים כאן?</summary>
+  כל עיגול = תגובה אחת בדיון, מלמעלה (הראשונה) למטה (האחרונה). <b>גודל</b> העיגול ~ אורך התגובה; <b>האותיות</b> — העורך/ת; <b>הקווים</b> — למי הגיבו (לפי הזחת הוויקי, שאינה תמיד עקבית); <b>הצבע</b> — לפי המתג למעלה: רגש התגובה (סיווג מילוני ראשוני) או זהות העורך. קווים מקווקווים = מעבר שנה. לחיצה על עיגול מציגה את התגובה; הסליידר שמעל מריץ את הדיון בסדר כרונולוגי.</details>`);
   zoomable($("#view"),t.title+" — מבנה הדיון");
+  if(RD)setTR($("#sliderR").value);
   document.querySelectorAll(".node").forEach(n=>n.onclick=e=>{e.stopPropagation();const c=C[+n.dataset.i];
     $("#snip").innerHTML=`<div class="snip" style="border-inline-start-color:${EMO[c.emo.label].c}"><div class="w">${esc(c.user||"לא חתום")} · ${c.date} ${c.time||""} · ${EMO[c.emo.label].he}</div>${wiki(c.text)}</div>`;});
 }
 document.querySelectorAll("th").forEach(h=>h.onclick=()=>{const k=h.dataset.k; if(sortK===k)sortDir*=-1; else{sortK=k;sortDir=k==="title"||k==="first"?1:-1;}
   document.querySelectorAll("th").forEach(x=>x.className=""); h.className=sortDir>0?"asc":"desc"; renderThs();});
 $("#q").oninput=renderThs; $("#min").oninput=e=>{$("#minV").textContent=e.target.value;renderThs();};
+
 $("#fCore").onchange=$("#fAdj").onchange=renderArts;
 document.querySelectorAll(".back").forEach(b=>b.onclick=e=>{e.preventDefault();main.dataset.view=b.dataset.to;});
 

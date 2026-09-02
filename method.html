@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>איך המחקר עובד — הצינור המלא</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;500;700&family=Heebo:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#EDF0EE;--panel:#FAFBFA;--ink:#16232B;--mute:#6B7A83;--line:#D3D9D6;--blue:#2B6F8A;--blue-soft:#CFE0E8;--green:#3E7C4F;--red:#B3402A;--amber:#9C7A1E;--serif:"Frank Ruhl Libre",serif;--sans:"Heebo",system-ui,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-weight:300;font-size:17px;line-height:1.65}
+.wrap{max-width:46rem;margin:0 auto;padding:3rem 1.4rem 5rem}
+h1{font-family:var(--serif);font-weight:500;font-size:2rem;line-height:1.2;margin:0 0 .4rem}
+h2{font-family:var(--serif);font-weight:500;font-size:1.3rem;margin:2.4rem 0 .5rem}
+.lead{font-size:1.1rem;color:var(--mute);margin:0 0 2rem}
+.mod{background:var(--panel);border-inline-start:3px solid var(--blue-soft);padding:.8rem 1rem;margin:.6rem 0}
+.mod h3{font-family:var(--serif);font-weight:500;font-size:1.05rem;margin:0 0 .25rem}
+.mod .st{font-size:.78rem;padding:0 .4rem;border-radius:3px;margin-inline-start:.6rem;vertical-align:middle}
+.st.done{color:var(--green);background:#DCEBE0}.st.v0{color:var(--amber);background:#EFE4C2}.st.wait{color:var(--mute);background:#E4E8E6}
+.mod p{margin:.2rem 0;font-size:.95rem}
+a{color:var(--blue)}
+.note{background:var(--panel);padding:.8rem 1rem;border-radius:6px;font-size:.95rem;margin:1rem 0}
+.back{font-size:.9rem}
+</style>
+</head>
+<body><div class="wrap">
+<p class="back"><a href="./">→ לעמוד הראשי</a></p>
+<h1>איך המחקר עובד</h1>
+<p class="lead">מסלול הנתונים המלא, מדף שיחה גולמי ועד לתוצאה סטטיסטית — מודול אחר מודול, כולל מה כל מודול עושה היום ומה עוד ישתנה.</p>
+
+<p>השאלה: האם <b>רגשות</b> בדיוני ויקיפדיה (תוקפנות, פיוס, תשישות) מנבאים את <b>מבנה הדיון</b> (נשירה או התכנסות) ודרכו את <b>איכות הערך</b> — גם <b>יציבות</b> (כמה זמן הגרסה שורדת) וגם <b>נכונות</b> (האם היא בכלל מדויקת)? והפרובוקציה: האם ויקיפדיה יכולה להיות יציבה־אך־שגויה?</p>
+
+<h2>הצינור, מודול אחר מודול</h2>
+<div class="mod"><h3>M1 · הגדרת קורפוס<span class="st v0">מדגם ראשוני</span></h3><p>סריקת עצי קטגוריות סביב בריאות הנפש: 834 ערכים מועמדים עם דפי שיחה פעילים, מדורגים לפי פעילות. כרגע עובדים על מדגם של 18 ערכים; הרשימה הסופית תיקבע ידנית (<a href="curate.html">כלי הסינון</a>).</p></div>
+<div class="mod"><h3>M2 · איסוף נתונים<span class="st done">מוכן</span></h3><p>לכל ערך: טקסט דפי השיחה והארכיונים + היסטוריית העריכות המלאה של השיחה ושל הערך, דרך ה-API של ויקיפדיה.</p></div>
+<div class="mod"><h3>M3 · פילוח הדיון<span class="st v0">v1</span></h3><p>פיצול לפי כותרות לדיונים, ולפי חתימות והזחות לתגובות: מי כתב, מתי, ולמי הגיב (עץ). רעש ידוע: תגובות לא חתומות והזחות לא עקביות.</p></div>
+<div class="mod"><h3>M4 · קידוד רגש<span class="st v0">מילוני, זמני</span></h3><p>כל תגובה מסווגת: תוקפנות / פיוס / תשישות / ניטרלי — כרגע בהתאמת מילון גסה, שתוחלף בקידוד מבוסס מודל שפה עם טקסונומיה שתיקבע עם צוות הפסיכולוגיה, ובתיקוף מול קידוד ידני. זה המודול הקריטי ביותר לשדרוג.</p></div>
+<div class="mod"><h3>M5 · דינמיקת הדיון<span class="st wait">טרם נבנה</span></h3><p>מדדים לכל דיון: נשירת משתתפים אחרי תגובות עוינות, התכנסות, הדבקה רגשית. ממתין להגדרות המושגים.</p></div>
+<div class="mod"><h3>M6 · יציבות<span class="st v0">v0</span></h3><p>מהיסטוריית הערך: שחזורים (גרסה שחוזרת בדיוק לקודמת, לפי חתימת תוכן), מלחמות עריכה, ואורך חיי גרסאות. "שחזור" = מישהו מחק את מה שמישהו אחר עשה.</p></div>
+<div class="mod"><h3>M7a · איכות — מדד LLM<span class="st v0">v0, 70 גרסאות</span></h3><p>לכל דיון עשיר: הגרסה שנותרה אחריו דורגה 1–7 בדיוק, ביסוס ואיזון. ממוצעי הקורפוס: 4.9 / 3.9 / 5.0. מדד־ביניים בלבד.</p></div>
+<div class="mod"><h3>M7b · איכות — מומחים<span class="st wait">טרם נבנה</span></h3><p>דירוג מומחים על תת-מדגם — עוגן התיקוף הקליני של M7a.</p></div>
+<div class="mod"><h3>M8 · קישור דיון↔עריכות<span class="st v0">v1</span></h3><p>לוויקיפדיה אין קישור מובנה בין דיון לעריכה, ולכן הקישור מוסק: חלון זמן + ציון קישור מחמישה אותות (קישורי diff, שחזור שקדם לדיון, חפיפת עורכים, תקצירי עריכה שמפנים לשיחה, התאמת שם פרק). חשוב: הנורמה בוויקיפדיה היא עריכה→שחזור→דיון, כך שהדיון והעריכות הם שני פנים של אותה מחלוקת — לא סיבה ותוצאה.</p></div>
+
+<h2>איך זה מתחבר לתצוגות</h2>
+<p>ב<a href="explorer.html">סייר</a>: ציר הזמן של הערך (M6+M4+M7a בשלוש שכבות), עץ הדיון (M3+M4), ורצועת הדיון-והתוצאה (M8+M6). בכל תצוגה יש "ⓘ מה רואים כאן?" עם ההגדרה החישובית המדויקת, וסליידר שמריץ את ההיסטוריה.</p>
+
+<h2>מה כבר יצא מהרצת הניסוי</h2>
+<p>הרצה ראשונה (71 דיונים עשירים), כבדיקת צנרת בלבד: הקשר המובהק היחיד — יותר עורכים בדיון ⇐ גרסה פחות יציבה אחריו (ρ=−.36). והממצא המסקרן: <b>יציבות ונכונות אינן מתואמות כלל</b> (ρ=−.04) — רמז ראשון לכך שוויקיפדיה יכולה להיות יציבה־אך־שגויה. שני הממצאים דורשים מדידה טובה יותר לפני כל טענה. <a href="site/report.pdf">הדוח המלא (PDF)</a>.</p>
+
+<div class="note">מחקר של ענת טלמון (האוניברסיטה העברית) ונמרוד טלמון (אוניברסיטת בן-גוריון), במימון קרן דרור לין של ויקימדיה ישראל. <a href="https://github.com/nimrodtalmon/Wikipediadiscussions">קוד פתוח</a>.</div>
+</div></body></html>

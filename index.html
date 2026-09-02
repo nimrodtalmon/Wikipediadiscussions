@@ -44,6 +44,7 @@ p{margin:.4rem 0}
 
 <h2>כלים</h2>
 <div class="links">
+<a href="method.html">איך זה עובד<small>הצינור המלא, מודול אחר מודול — התחילו כאן</small></a>
 <a href="explorer.html">סייר הקורפוס<small>ערכים, דיונים, וקריאת כל שיחה כרצף תגובות</small></a>
 <a href="curate.html">סינון מועמדים<small>834 דפי שיחה פעילים, לבחירת רשימת הערכים</small></a>
 <a href="site/report.pdf">דוח עבודה<small>PDF, מתעדכן עם המחקר</small></a>
@@ -54,7 +55,7 @@ p{margin:.4rem 0}
 <p class="foot" id="built"></p>
 </div>
 <script>
-fetch("site/corpus.json?v=1788326096").then(r=>r.json()).then(d=>{const A=d.articles,T=A.flatMap(a=>a.threads);
+fetch("site/corpus.json?v=1788326674").then(r=>r.json()).then(d=>{const A=d.articles,T=A.flatMap(a=>a.threads);
 const v=[A.length,T.length,T.reduce((s,t)=>s+t.comments,0),T.filter(t=>t.comments>=5).length];
 document.querySelectorAll("#stats b").forEach((b,i)=>b.textContent=v[i]);
 document.getElementById("built").textContent="נתונים נמשכו מוויקיפדיה העברית ב-"+d.built+".";});
