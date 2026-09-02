@@ -129,7 +129,7 @@ const USER=/\[\[(?:משתמש|משתמשת|שיחת משתמש|שיחת משתמ
 let D, cur=null, curTh=null, sortK="comments", sortDir=-1, colorMode="emo";
 const EMO={agg:{c:"#B3402A",he:"תוקפנות"},con:{c:"#3E7C4F",he:"פיוס"},fru:{c:"#C08A1F",he:"תשישות"},neu:{c:"#98A5AB",he:"ניטרלי"}};
 const main=$("main");
-fetch("site/corpus.json?v=1788321958").then(r=>r.json()).then(d=>{D=d;
+fetch("site/corpus.json?v=1788322055").then(r=>r.json()).then(d=>{D=d;
   const A=d.articles, T=A.reduce((s,a)=>s+a.threads.length,0), C=A.reduce((s,a)=>s+a.threads.reduce((x,t)=>x+t.comments,0),0);
   $("#meta").textContent=`${A.length} ערכים · ${T} דיונים · ${C} תגובות חתומות · נבנה ${d.built}`;
   renderArts();});
@@ -159,7 +159,7 @@ function renderThs(){
   rows.sort((x,y)=>{const u=x[sortK],v=y[sortK];return (typeof u==="number"?u-v:String(u).localeCompare(String(v),"he"))*sortDir;});
   $("#thBody").innerHTML=rows.map(t=>`<tr class="th ${curTh===t.i?'sel':''}" data-i="${t.i}" tabindex="0">
     <td><span class="ttl">${esc(t.title)}</span>${t.page.includes("/")?`<span class="pg">${esc(t.page.split(":")[1])}</span>`:""}</td>
-    <td class="num"><b>${t.comments}</b></td><td class="num">${t.editors}</td><td class="num">${(t.chars/1000).toFixed(1)}k</td><td class="num">${t.first||"—"}</td><td class="num">${t.link?`${t.link.post_days}ימ׳${t.link.censored?"+":""}`:"—"}</td></tr>`).join("")
+    <td class="num"><b>${t.comments}</b></td><td class="num">${t.editors}</td><td class="num">${(t.chars/1000).toFixed(1)}k</td><td class="num">${t.first||"—"}</td><td class="num">${t.link?`<div style="display:inline-block;vertical-align:middle;height:5px;border-radius:2px;background:#3E7C4F;opacity:${Math.min(0.95,0.25+Math.log10(t.link.post_days+1)/3.5).toFixed(2)};width:${Math.max(3,Math.min(40,Math.log10(t.link.post_days+1)*13)).toFixed(0)}px"></div> ${t.link.post_days}${t.link.censored?"+":""}`:"—"}</td></tr>`).join("")
     ||`<tr><td colspan="6" class="empty">אין דיונים שעונים לסינון.</td></tr>`;
   document.querySelectorAll("tr.th").forEach(el=>{el.onclick=el.onkeydown=e=>{if(e.type==="keydown"&&e.key!=="Enter")return;showThread(+el.dataset.i);};});
 }
@@ -179,11 +179,13 @@ function showThread(i){
   curTh=i; const a=D.articles.find(x=>x.title===cur), t=a.threads[i]; renderThs();
   const url=`https://he.wikipedia.org/wiki/${encodeURIComponent(t.page)}#${encodeURIComponent(t.title.replace(/ /g,"_"))}`;
   $("#reader").innerHTML=`<h3>${esc(t.title)}</h3><div class="sub">${esc(a.title)} · ${t.comments} תגובות חתומות · ${t.editors} עורכים${t.first?` · ${t.first} עד ${t.last}`:""}${t.link?` · בחלון הדיון: ${t.link.win_edits} עריכות, ${t.link.win_reverts} שחזורים · שחזור הבא ${t.link.post_days} ימים אחרי${t.link.censored?" (טרם)":""}`:""}<a href="${url}" target="_blank" rel="noopener">לדף המקור</a></div>
+  <div id="outcome"></div>
   <div class="tabs"><a href="#" id="tabTree" class="on">מבנה הדיון</a><a href="#" id="tabRaw">השיחה</a><span class="colorby">צבע לפי <a href="#" id="cbE">רגש</a><a href="#" id="cbU">עורך</a></span></div><div id="view"></div>`;
   $("#cbE").onclick=e=>{e.preventDefault();colorMode="emo";setTab(curTab,t)};
   $("#cbU").onclick=e=>{e.preventDefault();colorMode="ed";setTab(curTab,t)};
   $("#tabTree").onclick=e=>{e.preventDefault();setTab("tree",t)};
   $("#tabRaw").onclick=e=>{e.preventDefault();setTab("raw",t)};
+  renderOutcome(a,t);
   main.dataset.view="reader"; $("#rd").scrollTop=0;
   if(!t.cmts){$("#view")&&0;t.cmts=[];}
   setTab(t.cmts.length>1?"tree":"raw",t);
@@ -193,6 +195,24 @@ function setTab(which,t){ curTab=which;
   $("#cbE").className=colorMode==="emo"?"on":""; $("#cbU").className=colorMode==="ed"?"on":"";
   $("#tabTree").className=which==="tree"?"on":""; $("#tabRaw").className=which==="raw"?"on":"";
   if(which==="raw") renderRaw(t); else renderTree(t);
+}
+function renderOutcome(a,t){
+  if(!t.link||!t.first){$("#outcome").innerHTML="";return;}
+  const W=Math.max(300,Math.min(($("#rd").clientWidth||window.innerWidth)-60,640)), H=44, pad=8, y0=20;
+  const d=x=>new Date(x).getTime(), DAY=86400000;
+  const w0=d(t.first)-DAY, w1=d(t.last)+8*DAY;
+  const revAll=(a.tl?a.tl.rev:[]).map(d0=>new Date(d0).getTime());
+  const nxt=revAll.filter(x=>x>=w1).sort((p,q)=>p-q)[0];
+  const end=nxt||Date.now();
+  const X=x=>pad+(x-w0)/(end-w0||1)*(W-2*pad);
+  let g=`<rect x="${X(w0)}" y="${y0-8}" width="${X(w1)-X(w0)}" height="16" fill="#CFE0E8" opacity="0.55"/>`;
+  g+=`<rect x="${X(w1)}" y="${y0-2}" width="${Math.max(X(end)-X(w1),1)}" height="4" fill="#3E7C4F" opacity="0.8"/>`;
+  revAll.filter(x=>x>=w0&&x<w1).forEach(x=>g+=`<line x1="${X(x)}" x2="${X(x)}" y1="${y0-8}" y2="${y0+8}" stroke="#B3402A" stroke-width="1.2" opacity="0.8"/>`);
+  t.cmts.filter(c=>c.date).forEach(c=>g+=`<circle cx="${X(d(c.date))}" cy="${y0}" r="2.6" fill="${EMO[c.emo.label].c}"/>`);
+  if(nxt)g+=`<line x1="${X(nxt)}" x2="${X(nxt)}" y1="${y0-10}" y2="${y0+10}" stroke="#B3402A" stroke-width="2"/>`;
+  g+=`<text x="${X(w0)}" y="${H-3}" font-size="8.5" fill="#9AA5AB">${t.first}</text>`;
+  g+=`<text x="${W-pad}" y="${H-3}" font-size="8.5" fill="#9AA5AB" text-anchor="end">${nxt?"שחזור אחרי "+t.link.post_days+" ימ׳":"ללא שחזור עד היום ("+t.link.post_days+" ימ׳)"}</text>`;
+  $("#outcome").innerHTML=`<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" style="direction:ltr">${g}</svg>`;
 }
 function renderRaw(t){
   $("#view").innerHTML=t.cmts.map(c=>`<div class="cmt ${c.signed?'':'unsigned'}" style="margin-inline-start:${Math.min(c.ind,8)*1.1}rem"><div class="body">${wiki(c.text)}</div><div class="who"><b><i class="edot" style="background:${EMO[c.emo.label].c}"></i>${esc(c.user||(c.signed?"?":"לא חתום"))}</b><span class="d">${c.date}</span></div></div>`).join("");
