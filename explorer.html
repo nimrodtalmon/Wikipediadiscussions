@@ -129,7 +129,7 @@ const USER=/\[\[(?:משתמש|משתמשת|שיחת משתמש|שיחת משתמ
 let D, cur=null, curTh=null, sortK="comments", sortDir=-1, colorMode="emo";
 const EMO={agg:{c:"#B3402A",he:"תוקפנות"},con:{c:"#3E7C4F",he:"פיוס"},fru:{c:"#C08A1F",he:"תשישות"},neu:{c:"#98A5AB",he:"ניטרלי"}};
 const main=$("main");
-fetch("site/corpus.json?v=1788322896").then(r=>r.json()).then(d=>{D=d;
+fetch("site/corpus.json?v=1788323143").then(r=>r.json()).then(d=>{D=d;
   const A=d.articles, T=A.reduce((s,a)=>s+a.threads.length,0), C=A.reduce((s,a)=>s+a.threads.reduce((x,t)=>x+t.comments,0),0);
   $("#meta").textContent=`${A.length} ערכים · ${T} דיונים · ${C} תגובות חתומות · נבנה ${d.built}`;
   renderArts();});
@@ -225,47 +225,54 @@ function editorColors(cmts){
 function renderStrip(a){
   const tl=a.tl; if(!tl){$("#strip").innerHTML="";return;}
   const W=Math.max(320,($("#ths").clientWidth||window.innerWidth)-40);
-  const bandH=38, laneH=11, pad=6, labelW=64;
+  const pad=6, labelW=70, plotW=W-labelW-2*pad;
   const m0=new Date(tl.m0+"-01").getTime(), m1=Date.now();
-  // RTL time axis: oldest on the right, today on the left
-  const X=d=>W-labelW-pad-(new Date(d).getTime()-m0)/(m1-m0)*(W-labelW-2*pad);
-  const mx=Math.max(...tl.edits,1);
-  const bw=(W-labelW-2*pad)/tl.edits.length;
-  let g="";
-  // edit-rate density
-  g+=tl.edits.map((e,i)=>e?`<rect x="${(X(m0)-(i+1)*bw).toFixed(1)}" y="${(bandH-4-30*e/mx).toFixed(1)}" width="${Math.max(bw-0.4,0.8).toFixed(1)}" height="${(30*e/mx+2).toFixed(1)}" fill="#B9C8CF" shape-rendering="crispEdges"/>`:"").join("");
-  g+=`<line x1="${X(m1)}" x2="${X(m0)}" y1="${bandH}" y2="${bandH}" stroke="#C8D0CD"/>`;
-  // reverts
-  g+=tl.rev.map(d=>`<line x1="${X(d).toFixed(1)}" x2="${X(d).toFixed(1)}" y1="4" y2="${bandH}" stroke="#B3402A" stroke-width="1.1" opacity="0.75" shape-rendering="crispEdges"/>`).join("");
-  // stability band
-  const bounds=[tl.m0+"-01",...tl.rev.slice().sort(),new Date(m1).toISOString().slice(0,10)];
-  for(let k=0;k+1<bounds.length;k++){
-    const d=(new Date(bounds[k+1])-new Date(bounds[k]))/86400000; if(d<=0)continue;
-    const op=Math.min(0.9,0.12+Math.log10(d+1)/3.5);
-    g+=`<rect x="${X(bounds[k+1]).toFixed(1)}" y="${bandH+3}" width="${Math.max(X(bounds[k])-X(bounds[k+1]),0.5).toFixed(1)}" height="5" fill="#3E7C4F" opacity="${op.toFixed(2)}"/>`;
-  }
-  const longest=Math.max(...bounds.slice(0,-1).map((b,k)=>(new Date(bounds[k+1])-new Date(b))/86400000));
+  const X=d=>W-labelW-pad-(new Date(d).getTime()-m0)/(m1-m0)*plotW;
+  const Xi=i=>W-labelW-pad-(i+0.5)/tl.edits.length*plotW; // month index → x
+  const nM=tl.edits.length;
+  // monthly reverts
+  const revM=new Array(nM).fill(0);
+  const mIdx=d=>{const t=new Date(d);return Math.min(nM-1,Math.max(0,(t.getFullYear()-new Date(m0).getFullYear())*12+t.getMonth()-new Date(m0).getMonth()));};
+  tl.rev.forEach(d=>revM[mIdx(d)]++);
+  // cumulative net construction
+  let cum=[],c=0; for(let i=0;i<nM;i++){c+=tl.edits[i]-2*revM[i];cum.push(c);}
+  const cMax=Math.max(...cum,1), cMin=Math.min(...cum,0);
+  const H1=72, y1=(v)=>8+(cMax-v)/(cMax-cMin||1)*(H1-16);
+  let line="M "+cum.map((v,i)=>`${Xi(i).toFixed(1)} ${y1(v).toFixed(1)}`).join(" L ");
+  // sentiment balance per month (3-month smoothed)
+  const val=new Array(nM).fill(0);
+  a.threads.forEach(t=>t.cmts.forEach(cm=>{if(!cm.date)return;const w={agg:-1,fru:-0.5,con:1,neu:0}[cm.emo.label];if(w)val[mIdx(cm.date)]+=w;}));
+  const sm=val.map((_,i)=>{let s=0,n=0;for(let k=Math.max(0,i-1);k<=Math.min(nM-1,i+1);k++){s+=val[k];n++;}return s/n;});
+  const sMax=Math.max(...sm.map(Math.abs),1);
+  const H2=44, z=H1+10+H2/2, ys=v=>z-v/sMax*(H2/2-4);
+  let sent="";
+  sm.forEach((v,i)=>{if(Math.abs(v)<1e-6)return;
+    sent+=`<rect x="${(Xi(i)-plotW/nM/2).toFixed(1)}" y="${Math.min(z,ys(v)).toFixed(1)}" width="${(plotW/nM).toFixed(2)}" height="${Math.abs(z-ys(v)).toFixed(1)}" fill="${v>0?"#3E7C4F":"#B3402A"}" opacity="0.75" shape-rendering="crispEdges"/>`;});
+  // quality diamonds on top panel
+  let qmarks="";
+  a.threads.forEach((t,i)=>{if(!t.q)return;const x=X(t.q.rev_ts.slice(0,10)),m=mIdx(t.q.rev_ts.slice(0,10)),y=y1(cum[m])-10;
+    qmarks+=`<g class="tmark" data-i="${i}" style="cursor:pointer"><path d="M ${x} ${y-6} l 5 6 l -5 6 l -5 -6 z" fill="#C08A1F" stroke="#fff" stroke-width="1"><title>איכות (LLM): דיוק ${t.q.accuracy}/7 — ${esc(t.title)}</title></path><text x="${x}" y="${y-9}" font-size="8.5" fill="#9C7A1E" text-anchor="middle">${t.q.accuracy}</text></g>`;});
   // discussion lanes
-  const y1=bandH+14;
+  const yL=H1+10+H2+12;
   const ths=a.threads.map((t,i)=>({t,i})).filter(x=>x.t.first).sort((x,y)=>x.t.first<y.t.first?-1:1);
-  const lanes=[];
+  const lanes=[]; const laneH=11;
   const items=ths.map(x=>{const e=X(x.t.first),ss=Math.min(X(x.t.last||x.t.first),e-4);
     let L=lanes.findIndex(v=>v>e+2); if(L<0){L=lanes.length;lanes.push(1e9);} lanes[L]=ss;
     const n={agg:0,con:0,fru:0}; x.t.cmts.forEach(c=>{if(c.emo.label!=="neu")n[c.emo.label]++});
     const dom=Object.keys(n).sort((p,q)=>n[q]-n[p])[0];
     return {...x,s:ss,e,L,col:n[dom]>0?EMO[dom].c:"#8FA0A8"};});
-  g+=items.map(x=>`<line class="tmark" data-i="${x.i}" x1="${x.s.toFixed(1)}" x2="${x.e.toFixed(1)}" y1="${y1+x.L*laneH}" y2="${y1+x.L*laneH}" stroke="${x.col}" stroke-width="6" stroke-linecap="round" style="cursor:pointer"><title>${esc(x.t.title)} — ${x.t.comments} תגובות</title></line>`).join("");
-  const H=y1+lanes.length*laneH+16;
-  // row labels (right side, Hebrew)
-  g+=`<text x="${W-2}" y="${bandH-14}" font-size="10" fill="#6B7A83" text-anchor="end">עריכות</text>`;
-  g+=`<text x="${W-2}" y="${bandH+11}" font-size="10" fill="#3E7C4F" text-anchor="end">שקט</text>`;
-  g+=`<text x="${W-2}" y="${y1+6}" font-size="10" fill="#6B7A83" text-anchor="end">דיונים</text>`;
-  // year labels
+  let marks=items.map(x=>`<line class="tmark" data-i="${x.i}" x1="${x.s.toFixed(1)}" x2="${x.e.toFixed(1)}" y1="${yL+x.L*laneH}" y2="${yL+x.L*laneH}" stroke="${x.col}" stroke-width="6" stroke-linecap="round" style="cursor:pointer"><title>${esc(x.t.title)} — ${x.t.comments} תגובות</title></line>`).join("");
+  const H=yL+lanes.length*laneH+16;
+  let g=`<path d="${line}" fill="none" stroke="#2B6F8A" stroke-width="1.8"/>`+qmarks;
+  g+=`<line x1="${X(m1)}" x2="${X(m0)}" y1="${z}" y2="${z}" stroke="#C8D0CD"/>`+sent+marks;
+  g+=`<text x="${W-2}" y="${8+10}" font-size="10" fill="#2B6F8A" text-anchor="end">בנייה נטו</text>`;
+  g+=`<text x="${W-2}" y="${z+3}" font-size="10" fill="#6B7A83" text-anchor="end">מאזן רגשי</text>`;
+  g+=`<text x="${W-2}" y="${yL+6}" font-size="10" fill="#6B7A83" text-anchor="end">דיונים</text>`;
   const yrStep=W<560?4:2;
   for(let y=new Date(m0).getFullYear()+1;y<=new Date(m1).getFullYear();y+=yrStep)
     g+=`<text x="${X(y+"-01-01").toFixed(1)}" y="${H-3}" font-size="9.5" fill="#9AA5AB" text-anchor="middle">${y}</text>`;
   $("#strip").innerHTML=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;direction:ltr" preserveAspectRatio="xMidYMid meet">${g}</svg>
-  <div style="font-size:.78rem;color:var(--mute);line-height:1.5">ציר הזמן נקרא מימין (ראשית הערך) לשמאל (היום). <span style="color:#7c8b93">▮ גובה העמודות = קצב עריכות חודשי</span> · <span style="color:#B3402A">| שחזור</span> · <span style="color:#3E7C4F">▬ רצף ללא שחזורים (כהה = ארוך; השיא כאן: ${Math.round(longest)} ימים)</span> · כל פס תחתון = דיון אחד בדף השיחה על פני תקופת פעילותו, בצבע הרגש הבולט בו — לחיצה על פס פותחת את הדיון.</div>`;
+  <div style="font-size:.78rem;color:var(--mute);line-height:1.5">מימין לשמאל: מראשית הערך עד היום. <span style="color:#2B6F8A">קו כחול — בנייה נטו: עולה עם כל עריכה, יורד עם כל שחזור</span>; מישורת או צניחה = מלחמת עריכה. <span style="color:#3E7C4F">ירוק מעל הקו</span>/<span style="color:#B3402A">אדום מתחתיו</span> — מאזן הרגש בדיונים באותו חודש (פיוס מול תוקפנות). <span style="color:#9C7A1E">◆ ציון דיוק (LLM) של גרסה שנבדקה</span>. כל פס תחתון = דיון אחד; לחיצה על פס או על ◆ פותחת את הדיון.</div>`;
   document.querySelectorAll(".tmark").forEach(m=>m.onclick=()=>showThread(+m.dataset.i));
 }
 function renderTree(t){
