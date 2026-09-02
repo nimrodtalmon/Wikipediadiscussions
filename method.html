@@ -27,6 +27,12 @@ details p,details li{color:var(--ink)}
 a{color:var(--blue)}
 .note{background:var(--panel);padding:.8rem 1rem;border-radius:6px;font-size:.95rem;margin:1rem 0}
 code{font-size:.85em;background:#E9EDEB;padding:0 .25rem;border-radius:2px}
+.tech{direction:ltr;text-align:left;font-size:.86rem;line-height:1.5;background:#F4F6F5;border-radius:6px;padding:.6rem .9rem;margin-top:.4rem;color:var(--ink)}
+.tech b{font-weight:500}
+.tech ul{margin:.2rem 0 .4rem 1.1rem;padding:0}
+.tech li{margin:.12rem 0}
+.tech .kv{display:grid;grid-template-columns:6.2rem 1fr;gap:.15rem .6rem;margin:.3rem 0}
+.tech .kv span:nth-child(odd){color:var(--mute)}
 </style>
 </head>
 <body><div class="wrap">
@@ -43,39 +49,91 @@ code{font-size:.85em;background:#E9EDEB;padding:0 .25rem;border-radius:2px}
 <div class="mod"><h3>1 · קורפוס<span class="st v0">מדגם ראשוני</span></h3>
 <p class="lbl">מה השלב אמור לעשות</p><p>להחליט על אילו ערכים עובדים, ולהביא את כל החומר הגולמי שלהם.</p>
 <p class="lbl">מה עושים היום</p><p>סרקנו את עצי הקטגוריות סביב בריאות הנפש ודירגנו 834 ערכים לפי פעילות דפי השיחה; מדגם ראשוני של 18 ערכים (13 קליניים, 5 סוערים-סמוכים) מניע את כל המספרים באתר. הרשימה הסופית תיקבע בצוות. לכל ערך מביאים את דפי השיחה (כולל ארכיונים) ואת כל היסטוריית העריכות של הערך ושל השיחה.</p>
-<details><summary>הגדרה טכנית</summary><p>מקור: MediaWiki API של ויקיפדיה העברית. נשלפים: הטקסט הנוכחי של דף השיחה וכל תת-דפי הארכיון; ולכל גרסה של הערך ושל דפי השיחה — חותמת זמן, עורך/ת, גודל, תקציר עריכה וחתימת-תוכן (sha1). הנתונים הגולמיים אינם נשמרים במאגר הקוד; הם נמשכים מחדש בכל הרצה.</p></details></div>
+<details><summary>הגדרה טכנית (English)</summary><div class="tech">
+<div class="kv"><span>Source</span><span>Hebrew Wikipedia, MediaWiki API (read-only).</span>
+<span>Per article</span><span>current wikitext of the talk page and every archive subpage; full revision list of the article and of each talk page.</span>
+<span>Per revision</span><span>timestamp, editor, byte size, edit summary, content hash (SHA-1).</span>
+<span>Storage</span><span>raw data is not committed; it is re-fetched by <code>src/fetch_talk.py</code>.</span></div></div></details></div>
 
 <div class="mod"><h3>2 · פילוח הדיון<span class="st v0">v1</span></h3>
 <p class="lbl">מה השלב אמור לעשות</p><p>להפוך דף שיחה אחד ארוך לרשימת דיונים, וכל דיון לרשימת תגובות: מי כתב, מתי, ובתשובה למי.</p>
 <p class="lbl">מה עושים היום</p><p>דף שיחה מחולק לדיונים לפי הכותרות שלו. בתוך דיון, כל תגובה מזוהה לפי החתימה שבסופה (שם + שעה ותאריך) ולפי עומק ההזחה שלה. תגובה מוזחת נחשבת תשובה לתגובה הקרובה שמעליה שהזחתה קטנה יותר — כך נבנה עץ הדיון. תגובות בלי חתימה נשארות "לא מזוהות".</p>
-<details><summary>הגדרה טכנית</summary><p>דיון = הטקסט בין שתי כותרות <code>== ... ==</code>. תגובה = רצף שורות סמוכות בעלות אותה רמת הזחה (מספר תווי <code>:</code>, <code>*</code>, <code>#</code> בתחילת השורה), המסתיים בשורה שיש בה חתימת-זמן בתבנית <code>שעה:דקה, יום בחודש שנה (IST/IDT/UTC)</code>, או בשורה ריקה. עורך/ת התגובה = קישור המשתמש האחרון שמופיע בה; זמנה = חתימת הזמן האחרונה בה. הורה בעץ = התגובה הקודמת הקרובה ביותר שרמת הזחתה קטנה יותר (תגובה בהזחה 0 היא שורש). מגבלות: הזחה לא עקבית ותגובות לא חתומות.</p></details></div>
+<details><summary>הגדרה טכנית (English)</summary><div class="tech">
+<div class="kv"><span>Input</span><span>talk-page wikitext.</span><span>Output</span><span>threads → ordered comments, each with editor, timestamp, indent level, reply-parent.</span></div>
+<ul>
+<li><b>Thread</b> = text between two <code>== heading ==</code> lines.</li>
+<li><b>Comment</b> = a run of consecutive lines with the same indent level (count of leading <code>:</code> <code>*</code> <code>#</code>), ended by a line containing a signature timestamp (<code>hh:mm, d &lt;month&gt; yyyy (IST|IDT|UTC)</code>) or by a blank line.</li>
+<li><b>Editor</b> = the last user-page link inside the comment; <b>time</b> = the last signature timestamp inside it. Unsigned runs get no editor/time.</li>
+<li><b>Reply-parent</b> = the nearest preceding comment with a smaller indent level; indent 0 = root.</li>
+<li><b>Known limits</b>: inconsistent indentation; unsigned fragments; wrapped signatures.</li>
+</ul></div></details></div>
 
 <div class="mod"><h3>3 · רגש בתגובה<span class="st v0">שני מימושים</span></h3>
 <p class="lbl">מה השלב אמור לעשות</p><p>לתת לכל תגובה תווית רגשית — תוקפנות, פיוס, תשישות או ניטרלי — ועוצמה.</p>
 <p class="lbl">מה עושים היום</p><p>יש שני מימושים, ואפשר להחליף ביניהם בסייר: <b>מילון</b> — סופרים בכל תגובה מילים וביטויים מרשימה קבועה; ו-<b>LLM</b> — מודל שפה קורא את התגובה ומתייג אותה. על הדיון היחיד שקודד בשתי הדרכים (128 תגובות) הן הסכימו רק ב-45%: המילון זיהה 29 תגובות תוקפניות, המודל 68 — המילון עיוור לציניות ולהאשמות מנומסות.</p>
 <div class="impl"><b>מימוש א — מילון.</b> הרשימה נמצאת ב-<a href="https://github.com/nimrodtalmon/Wikipediadiscussions/blob/main/data/lexicon.csv">data/lexicon.csv</a> (95 ביטויים בשלוש קטגוריות) וכל אחד יכול לערוך אותה. <b>מימוש ב — LLM.</b> קידוד ידני-מודלי, נבנה בישיבות; כרגע מכסה דיון אחד, ומתרחב.</div>
-<details><summary>הגדרה טכנית</summary><p><b>מילון:</b> לכל קטגוריה, ציון = מספר מופעי הביטויים שלה בתגובה; לתוקפנות נוספים מופעי <code>!!</code> ו-<code>??</code>. עוצמה = ציון לכל 1000 תווים. התווית = הקטגוריה עם הציון הגבוה ביותר, בתנאי שעוצמתה ≥ 0.8; אחרת ניטרלי. <b>LLM:</b> אותה סכמת פלט (תווית + עוצמה 0–1) לכל תגובה, לפי מפתח <code>ערך::דיון::תגובה</code>. <b>ערכיות</b> (משמשת בשלב 4): פיוס +1, תוקפנות −1, תשישות −0.5, ניטרלי 0.</p></details></div>
+<details><summary>הגדרה טכנית (English)</summary><div class="tech">
+<div class="kv"><span>Input</span><span>one comment's text.</span><span>Output</span><span><code>{label ∈ {agg, con, fru, neu}, s ∈ [0,1]}</code>; identical schema for both implementations.</span></div>
+<ul>
+<li><b>A. Lexicon</b> (<code>data/lexicon.csv</code>, columns <code>category, phrase</code>): score<sub>k</sub> = number of phrase occurrences of category k; aggression additionally counts <code>!!</code> and double question marks. intensity<sub>k</sub> = score<sub>k</sub> per 1,000 characters. label = argmax<sub>k</sub> score if its intensity ≥ 0.8, else <code>neu</code>. s = min(1, intensity/3).</li>
+<li><b>B. LLM</b> (<code>data/emotion_llm.json</code>, key <code>article::thread_index::comment_index</code>): coded comment by comment in sittings; missing keys fall back to A in the explorer.</li>
+<li><b>Valence</b> (consumed by module 4): con +1, agg −1, fru −0.5, neu 0.</li>
+<li><b>Agreement so far</b> (281 comments, 3 threads): 53%; B labels ~2× more aggression than A.</li>
+</ul></div></details></div>
 
 <div class="mod"><h3>4 · דינמיקת הדיון<span class="st v0">v0</span></h3>
 <p class="lbl">מה השלב אמור לעשות</p><p>לסכם דיון שלם למספרים שמתארים איך הוא התנהל: האם תוקפנות גררה תוקפנות, מי נשר, האם זה נגמר בהסכמה.</p>
 <p class="lbl">מה עושים היום</p><p>מרצף התגובות המתויגות (שלב 3) מחשבים: <i>הדבקה</i> — כמה תוקפנות מגדילה את הסיכוי שהתגובה הבאה תהיה תוקפנית; <i>נשירה אחרי תוקפנות</i> — מי היה פעיל, ספג תגובה תוקפנית מאחר, ולא חזר; <i>דו-קרב</i> — כמה תורות רצופים שני אנשים התכתשו לבד; <i>ריכוזיות</i> — כמה מהדיון הוא של אדם אחד; <i>התכנסות</i> — האם הסוף פייסני.</p>
-<details><summary>הגדרה טכנית</summary><p>יחס-תוקפנות = P(הבאה תוקפנית | הנוכחית תוקפנית) ÷ P(תוקפנית); מתאם-הדבקה = מתאם פירסון בין ערכיות תגובה לזו שאחריה. נשירה אחרי תוקפנות: משתתפ/ת שכתבו באחת משלוש התגובות שלפני תגובה תוקפנית של אחר/ת ולא כתבו עוד אחריה; מדווח כמספר וכחלק מהמשתתפים. דו-קרב = הריצה המתחלפת הארוכה ביותר A,B,A,B… ריכוזיות = חלק התגובות של הפעיל/ה ביותר. התכנסות = בשלוש התגובות האחרונות יש פיוס ואין תוקפנות. השלב אינו מגדיר דבר בעצמו — הוא פונקציה טהורה של פלט שלבים 2–3.</p></details></div>
+<details><summary>הגדרה טכנית (English)</summary><div class="tech">
+<div class="kv"><span>Input</span><span>a thread's ordered, labeled comments (modules 2+3).</span><span>Output</span><span>one number per measure, per thread.</span></div>
+<ul>
+<li><b>Aggression lift</b> = P(next is agg | current is agg) / P(agg). &gt;1 means aggression breeds aggression.</li>
+<li><b>Contagion r</b> = Pearson correlation between the valence of comment i and comment i+1.</li>
+<li><b>Hostile exits</b> = participants who posted in the 3 comments before another editor's aggressive comment and never posted again afterwards; reported as a count and as a share of participants.</li>
+<li><b>Duel length</b> = longest strictly alternating run A,B,A,B,… between two editors.</li>
+<li><b>Concentration</b> = share of comments by the most active editor.</li>
+<li><b>Convergence</b> = the last three comments contain <code>con</code> and no <code>agg</code>.</li>
+<li>Pure function of its inputs; defines nothing of its own.</li>
+</ul></div></details></div>
 
 <div class="mod"><h3>5 · יציבות הערך<span class="st v0">v0</span></h3>
 <p class="lbl">מה השלב אמור לעשות</p><p>למדוד עד כמה ערך "מחזיק": האם גרסאות שורדות, או שכל הזמן מוחקים ומחזירים.</p>
 <p class="lbl">מה עושים היום</p><p>מזהים <i>שחזורים</i> — עריכה שמחזירה את הערך בדיוק למצב קודם, כלומר מישהו ביטל את מה שמישהו אחר עשה; סופרים אותם, מזהים מלחמות עריכה (שחזורים צפופים), ומודדים כמה זמן גרסאות חיות.</p>
-<details><summary>הגדרה טכנית</summary><p>שחזור-זהות = גרסה שחתימת התוכן שלה זהה לגרסה קודמת, במרחק של יותר מגרסה אחת ולא יותר מ-50 גרסאות אחורה. שיעור שחזורים = שחזורי-זהות ÷ סך הגרסאות. מלחמת עריכה = רצף של שלושה שחזורי-זהות או יותר, כל אחד עד 48 שעות אחרי קודמו. אורך חיי גרסה = הזמן עד הגרסה הבאה (וגיל הגרסה הנוכחית עד היום); מדווחים חציון ומקסימום. תקציר עריכה המכיל "שחזור/ביטול/revert" נספר בנפרד, כאות משני.</p></details></div>
+<details><summary>הגדרה טכנית (English)</summary><div class="tech">
+<div class="kv"><span>Input</span><span>the article's revision list with content hashes.</span><span>Output</span><span>per-article stability summary + per-revision revert flags.</span></div>
+<ul>
+<li><b>Identity revert</b>: revision i whose SHA-1 equals that of an earlier revision j with 1 &lt; i−j ≤ 50 — the page returned exactly to a prior state.</li>
+<li><b>Revert rate</b> = identity reverts / total revisions.</li>
+<li><b>Edit war</b> = a chain of ≥3 identity reverts, each ≤48h after the previous one.</li>
+<li><b>Version lifetime</b> = time to the next revision (the current version's age counts up to today); median and maximum reported.</li>
+<li>Edit summaries matching <code>שחזור|ביטול|revert|undo</code> are counted separately as a secondary signal.</li>
+</ul></div></details></div>
 
 <div class="mod"><h3>6 · איכות גרסה<span class="st v0">מימוש LLM; מומחים בהמשך</span></h3>
 <p class="lbl">מה השלב אמור לעשות</p><p>לתת לכל גרסה של ערך — כל גרסה, בלי קשר לדיונים — ציון איכות: כמה היא נכונה, מבוססת ומאוזנת.</p>
 <p class="lbl">מה עושים היום</p><p>מודל שפה קורא קטע מהגרסה ומדרג 1–7 בשלושה ממדים, עם נימוק. את השלב הזה מפעילים על שני מדגמים של גרסאות (ראו "מדגמים" למטה). מימוש מומחים — דירוג אנושי על תת-מדגם — ייבנה כעוגן תיקוף.</p>
 <div class="impl"><b>מימוש א — LLM</b> (70 גרסאות + 48 זוגות דורגו). <b>מימוש ב — מומחים</b> (טרם).</div>
-<details><summary>הגדרה טכנית</summary><p>קלט: גרסה (revision) וקטע-עניין. הקטע = ~4000 תווים סביב המופע הראשון של מילת-מפתח, או תחילת הערך אם אין. פלט: דיוק קליני/מדעי, ביסוס במקורות, איזון ניסוח — כל אחד 1–7, ונימוק במשפט. ממוצעי הקורפוס במדגם א: 4.9 / 3.9 / 5.0. מגבלות: הקטע נוטה לפתיח; המחוון טרם תואם עם המומחים.</p></details></div>
+<details><summary>הגדרה טכנית (English)</summary><div class="tech">
+<div class="kv"><span>Input</span><span>a revision + a passage of interest.</span><span>Output</span><span>accuracy, sourcing, neutrality ∈ 1..7, plus a one-sentence rationale.</span></div>
+<ul>
+<li><b>Passage</b> ≈ 4,000 characters around the first occurrence of a keyword (e.g. from a thread title); falls back to the article lead.</li>
+<li><b>A. LLM rater</b>: prompt asks to rate the passage itself, not the discussion. Corpus means on sample A: 4.9 / 3.9 / 5.0.</li>
+<li><b>B. Expert rater</b>: not built; will use the same three dimensions on a subsample.</li>
+<li><b>Limits</b>: keyword localization is lead-biased; rubric not yet agreed with the expert team; single rater.</li>
+</ul></div></details></div>
 
 <div class="mod"><h3>7 · קישור דיון ↔ עריכות<span class="st v0">v1</span></h3>
 <p class="lbl">מה השלב אמור לעשות</p><p>לחבר בין מה שקרה בדף השיחה למה שקרה בערך: אילו עריכות שייכות לאיזו מחלוקת.</p>
 <p class="lbl">מה עושים היום</p><p>לוויקיפדיה אין קישור מובנה בין דיון לעריכה, אז מסיקים אותו: קודם לפי זמן (עריכות בזמן הדיון), ואז ציון-ביטחון מחמישה סימנים — קישור מפורש לעריכה בתוך הדיון, שחזור שקדם לפתיחת הדיון, אותם אנשים גם בדיון וגם בעריכות, תקציר עריכה שמפנה לשיחה, ושם הפרק שנדון. חשוב: הנוהג בוויקיפדיה הוא עריכה ← שחזור ← דיון, כך שהדיון והעריכות הם שני פנים של אותה מחלוקת, לא סיבה ותוצאה.</p>
-<details><summary>הגדרה טכנית</summary><p>חלון הדיון = [תגובה חתומה ראשונה −1 יום, תגובה אחרונה +7 ימים]. יציבות-אחרי = ימים מהתגובה האחרונה עד שחזור-הזהות הבא בערך (מצונזר-מימין כשאין). ציון קישור (0–11): קישור diff/oldid בטקסט הדיון +3; שחזור-זהות ב-3 הימים שלפני פתיחת הדיון +2; ≥2 עורכים משותפים לדיון ולעריכות בחלון +2 (בדיוק 1: +1); תקציר בחלון שמפנה לדף השיחה +2; מילה מכותרת הדיון בתקציר בחלון +2. ביטחון: גבוה ≥5, בינוני 3–4, נמוך ≤2. תוצאה במדגם: 28 גבוה / 25 בינוני / 18 נמוך מבין 71 דיונים עשירים.</p></details></div>
+<details><summary>הגדרה טכנית (English)</summary><div class="tech">
+<div class="kv"><span>Input</span><span>one thread + the article's revision list (with revert flags).</span><span>Output</span><span>window statistics, post-thread stability, linking score + confidence.</span></div>
+<ul>
+<li><b>Window</b> = [first signed comment − 1 day, last signed comment + 7 days].</li>
+<li><b>Post-thread stability</b> = days from the last comment to the next identity revert; right-censored at today if none.</li>
+<li><b>Linking score</b> (0–11), sum of: explicit <code>diff=</code>/<code>oldid=</code> link in the thread text +3; an identity revert within the 3 days before the thread opened (edit → revert → discuss) +2; ≥2 editors shared between the thread and in-window edits +2 (exactly 1: +1); an in-window edit summary citing the talk page +2; a thread-title word appearing in an in-window edit summary +2.</li>
+<li><b>Confidence</b>: high ≥5, medium 3–4, low ≤2. Seed corpus: 28 / 25 / 18 of 71 rich threads.</li>
+<li>Identifies a shared dispute episode; never a causal direction.</li>
+</ul></div></details></div>
 
 <div class="mod"><h3>8 · ניתוח<span class="st v0">בדיקת צנרת</span></h3>
 <p class="lbl">מה השלב אמור לעשות</p><p>לענות על השאלה: האם הרגש בדיון מנבא את מבנה הדיון, ודרכו את יציבות הערך ואת נכונותו.</p>
