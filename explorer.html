@@ -125,7 +125,7 @@ const USER=/\[\[(?:משתמש|משתמשת|שיחת משתמש|שיחת משתמ
 let D, cur=null, curTh=null, sortK="comments", sortDir=-1, colorMode="emo";
 const EMO={agg:{c:"#B3402A",he:"תוקפנות"},con:{c:"#3E7C4F",he:"פיוס"},fru:{c:"#C08A1F",he:"תשישות"},neu:{c:"#98A5AB",he:"ניטרלי"}};
 const main=$("main");
-fetch("site/corpus.json").then(r=>r.json()).then(d=>{D=d;
+fetch("site/corpus.json?v=1788321076").then(r=>r.json()).then(d=>{D=d;
   const A=d.articles, T=A.reduce((s,a)=>s+a.threads.length,0), C=A.reduce((s,a)=>s+a.threads.reduce((x,t)=>x+t.comments,0),0);
   $("#meta").textContent=`${A.length} ערכים · ${T} דיונים · ${C} תגובות חתומות · נבנה ${d.built}`;
   renderArts();});
@@ -180,6 +180,7 @@ function showThread(i){
   $("#tabTree").onclick=e=>{e.preventDefault();setTab("tree",t)};
   $("#tabRaw").onclick=e=>{e.preventDefault();setTab("raw",t)};
   main.dataset.view="reader"; $("#rd").scrollTop=0;
+  if(!t.cmts){$("#view")&&0;t.cmts=[];}
   setTab(t.cmts.length>1?"tree":"raw",t);
 }
 let curTab="tree";

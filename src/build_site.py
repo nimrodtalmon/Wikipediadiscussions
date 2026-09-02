@@ -51,4 +51,10 @@ for f in sorted((ROOT/"data").glob("*.json")):
                  "archives":len(rec["talk_pages"])-1,"threads":ths,"stab":stab(rec["article_revs"])})
 out={"built":__import__("datetime").date.today().isoformat(),"articles":arts}
 (ROOT/"site/corpus.json").write_text(json.dumps(out,ensure_ascii=False))
+import re as _re, time as _time
+stamp=str(int(_time.time()))
+for fn in ("explorer.html","index.html","curate.html"):
+    fp=ROOT/fn; h=fp.read_text()
+    h=_re.sub(r"(site/(?:corpus|candidates)\.json\?v=)[0-9]*",r"\g<1>"+stamp,h)
+    fp.write_text(h)
 print(len(arts),"articles,",sum(len(a["threads"]) for a in arts),"threads,",round((ROOT/"site/corpus.json").stat().st_size/1e6,2),"MB")
