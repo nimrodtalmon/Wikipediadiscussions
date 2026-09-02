@@ -60,6 +60,15 @@ td .pg{display:block;font-size:.72rem;color:var(--mute)}
 .body .tmpl{color:var(--mute);font-size:.8em;border:1px dashed var(--line);padding:0 .3rem;border-radius:2px}
 .body .sig{display:none}
 .empty{color:var(--mute);padding:2rem 1.6rem;font-family:var(--serif);font-size:1.1rem;max-width:30rem;line-height:1.5}
+.tabs{display:flex;gap:1.2rem;margin:0 0 .8rem;border-bottom:1px solid var(--line)}
+.tabs a{color:var(--mute);text-decoration:none;padding:.3rem 0;border-bottom:2px solid transparent;font-size:.9rem}
+.tabs a.on{color:var(--ink);border-bottom-color:var(--blue)}
+.legend{display:flex;flex-wrap:wrap;gap:.4rem .9rem;margin:.6rem 0 1rem;font-size:.8rem;color:var(--mute)}
+.legend i{display:inline-block;width:.75rem;height:.75rem;border-radius:50%;margin-inline-start:.3rem;vertical-align:-1px}
+svg text{font-family:var(--sans)}
+.node{cursor:pointer}
+.snip{background:var(--panel);border-inline-start:3px solid var(--blue);padding:.6rem .9rem;margin-top:.8rem;max-width:46rem;line-height:1.55}
+.snip .w{font-size:.78rem;color:var(--mute);margin-bottom:.2rem}
 .back{display:none;font-size:.85rem;padding:.3rem 1.2rem}
 @media (max-width:900px){
   main{grid-template-columns:1fr;height:auto}
@@ -156,20 +165,48 @@ function wiki(s){
 }
 function showThread(i){
   curTh=i; const a=D.articles.find(x=>x.title===cur), t=a.threads[i]; renderThs();
-  // group lines into comments: a comment ends at a signature timestamp (or at a blank line without one)
-  const lines=t.text.split("\n"); const cmts=[]; let buf=[],ind=0;
-  const flush=(signed)=>{ if(!buf.length)return; const raw=buf.join("\n"); const um=[...raw.matchAll(new RegExp(USER.source,"g"))].pop(); const sm=[...raw.matchAll(SIG)].pop();
-    cmts.push({raw,ind,user:um?um[1].trim():"",date:sm?sm[2]:"",signed}); buf=[]; };
-  for(const l of lines){ const m=l.match(/^([:*#]+)/); const d=m?m[1].length:0;
-    if(!l.trim()){flush(false);continue;}
-    if(buf.length&&d!==ind){flush(false);}
-    if(!buf.length)ind=d; buf.push(l.replace(/^[:*#]+\s?/,""));
-    if(SIG.test(l)){SIG.lastIndex=0;flush(true);} SIG.lastIndex=0; }
-  flush(false);
   const url=`https://he.wikipedia.org/wiki/${encodeURIComponent(t.page)}#${encodeURIComponent(t.title.replace(/ /g,"_"))}`;
-  $("#reader").innerHTML=`<h3>${esc(t.title)}</h3><div class="sub">${esc(a.title)} · ${t.comments} תגובות חתומות · ${t.editors} עורכים${t.first?` · ${t.first} עד ${t.last}`:""}<a href="${url}" target="_blank" rel="noopener">לדף המקור</a></div>`
-    +cmts.map(c=>`<div class="cmt ${c.signed?'':'unsigned'}" style="margin-inline-start:${Math.min(c.ind,8)*1.1}rem"><div class="body">${wiki(c.raw)}</div><div class="who"><b>${esc(c.user||(c.signed?"?":"לא חתום"))}</b><span class="d">${c.date}</span></div></div>`).join("");
+  $("#reader").innerHTML=`<h3>${esc(t.title)}</h3><div class="sub">${esc(a.title)} · ${t.comments} תגובות חתומות · ${t.editors} עורכים${t.first?` · ${t.first} עד ${t.last}`:""}<a href="${url}" target="_blank" rel="noopener">לדף המקור</a></div>
+  <div class="tabs"><a href="#" id="tabTree" class="on">מבנה הדיון</a><a href="#" id="tabRaw">השיחה</a></div><div id="view"></div>`;
+  $("#tabTree").onclick=e=>{e.preventDefault();setTab("tree",t)};
+  $("#tabRaw").onclick=e=>{e.preventDefault();setTab("raw",t)};
+  setTab(t.cmts.length>1?"tree":"raw",t);
   main.dataset.view="reader"; $("#rd").scrollTop=0;
+}
+function setTab(which,t){
+  $("#tabTree").className=which==="tree"?"on":""; $("#tabRaw").className=which==="raw"?"on":"";
+  if(which==="raw") renderRaw(t); else renderTree(t);
+}
+function renderRaw(t){
+  $("#view").innerHTML=t.cmts.map(c=>`<div class="cmt ${c.signed?'':'unsigned'}" style="margin-inline-start:${Math.min(c.ind,8)*1.1}rem"><div class="body">${wiki(c.text)}</div><div class="who"><b>${esc(c.user||(c.signed?"?":"לא חתום"))}</b><span class="d">${c.date}</span></div></div>`).join("");
+}
+function editorColors(cmts){
+  const eds=[...new Set(cmts.filter(c=>c.user).map(c=>c.user))];
+  const col={}; eds.forEach((e,i)=>col[e]=`hsl(${Math.round(i*137.5)%360} 42% 46%)`);
+  return {eds,col};
+}
+function renderTree(t){
+  const C=t.cmts; if(!C.length){$("#view").innerHTML=`<div class="empty">אין תגובות מזוהות בדיון הזה.</div>`;return;}
+  const {eds,col}=editorColors(C);
+  const row=34, step=30, pad=16, r=11;
+  const W=Math.min($("#rd").clientWidth-40,760), H=C.length*row+pad*2;
+  const x=c=>W-pad-r-Math.min(c.ind,12)*step, y=i=>pad+r+i*row;
+  let edges="",nodes="";
+  C.forEach((c,i)=>{
+    if(c.parent>=0){const px=x(C[c.parent]),py=y(c.parent),cx=x(c),cy=y(i);
+      edges+=`<path d="M ${px} ${py+r} V ${cy} H ${cx+r}" fill="none" stroke="#C6CFCB" stroke-width="1.3"/>`;}
+    const fill=c.user?col[c.user]:"#FFFFFF", stroke=c.user?fill:"#B4BDC2";
+    const init=esc((c.user||"?").slice(0,2));
+    nodes+=`<g class="node" data-i="${i}"><circle cx="${x(c)}" cy="${y(i)}" r="${r}" fill="${fill}" stroke="${stroke}"/>
+      <text x="${x(c)}" y="${y(i)+3.5}" text-anchor="middle" font-size="8.5" fill="${c.user?'#fff':'#8b969c'}">${init}</text>
+      ${c.date?`<text x="${W-pad+2}" y="${y(i)+3.5}" text-anchor="start" font-size="0" ></text>`:""}
+      <text x="${x(c)-r-6}" y="${y(i)+3.5}" text-anchor="end" font-size="9" fill="#9AA5AB">${c.date||""}</text></g>`;
+  });
+  const legend=eds.slice(0,14).map(e=>`<span>${esc(e)}<i style="background:${col[e]}"></i></span>`).join("")+(eds.length>14?` <span>+${eds.length-14}</span>`:"");
+  $("#view").innerHTML=`<div class="legend">${legend}${C.some(c=>!c.user)?'<span>לא מזוהה<i style="background:#fff;border:1px solid #B4BDC2"></i></span>':""}</div>
+  <svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" style="direction:ltr">${edges}${nodes}</svg><div id="snip"></div>`;
+  document.querySelectorAll(".node").forEach(n=>n.onclick=()=>{const c=C[+n.dataset.i];
+    $("#snip").innerHTML=`<div class="snip"><div class="w">${esc(c.user||"לא חתום")} · ${c.date} ${c.time||""}</div>${wiki(c.text)}</div>`;});
 }
 document.querySelectorAll("th").forEach(h=>h.onclick=()=>{const k=h.dataset.k; if(sortK===k)sortDir*=-1; else{sortK=k;sortDir=k==="title"||k==="first"?1:-1;}
   document.querySelectorAll("th").forEach(x=>x.className=""); h.className=sortDir>0?"asc":"desc"; renderThs();});
